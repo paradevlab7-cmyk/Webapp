@@ -1,0 +1,75 @@
+{
+  "meta": {
+    "title": "매일 만드는 웹앱 — 포트폴리오",
+    "maker": "paradevlab7",
+    "tagline": "설치도 로그인도 없이 브라우저에서 바로 쓰는 웹앱을 하루 3개씩 만듭니다.",
+    "repo": "https://github.com/paradevlab7-cmyk/Webapp",
+    "updated": "2026-11-23"
+  },
+  "categories": [
+    { "id": "util", "label": "실용·계산", "icon": "🧮" },
+    { "id": "game", "label": "게임·두뇌", "icon": "🎮" },
+    { "id": "finance", "label": "금융·생산성", "icon": "💸" }
+  ],
+  "apps": [
+    {
+      "slug": "calorie-coach",
+      "name": "칼로리 코치",
+      "date": "2026-11-23",
+      "category": "util",
+      "icon": "🥗",
+      "accent": "#5ee9a6",
+      "summary": "하루 목표 kcal·단백질 계산 + 식단 기록",
+      "description": "키·몸무게·나이·활동량으로 하루 목표 칼로리와 단백질을 계산하고, 오늘 먹은 음식을 담아 남은 양을 바로 확인하는 식단 계산기입니다. 한국 음식 영양 데이터를 내장해 검색 한 번으로 기록됩니다.",
+      "features": [
+        "Mifflin-St Jeor 공식으로 기초대사량·하루 목표 칼로리 자동 계산",
+        "활동량 5단계 선택으로 목표 kcal와 단백질·탄수·지방 배분 제시",
+        "한국 음식 49종 검색으로 먹은 것 기록",
+        "남은 칼로리 게이지와 최근 7일 막대 그래프",
+        "CSV 내려받기와 기록 공유"
+      ],
+      "tags": ["칼로리", "단백질", "식단", "다이어트", "계산기", "건강"],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-23/calorie-coach/",
+      "path": "apps/2026-11-23/calorie-coach/"
+    },
+    {
+      "slug": "rps-mind",
+      "name": "패턴 읽는 AI",
+      "date": "2026-11-23",
+      "category": "game",
+      "icon": "🧠",
+      "accent": "#9b8cff",
+      "summary": "내 습관을 학습하는 AI와 가위바위보",
+      "description": "당신의 선택 패턴을 학습하는 AI와 겨루는 가위바위보 게임입니다. AI가 예측한 다음 수와 예측 적중률을 실시간으로 공개해, 사람이 얼마나 읽히는지 눈으로 확인할 수 있습니다.",
+      "features": [
+        "직전 손·2수 조합·승패 습관·빈도 4가지 모델로 다음 수 예측",
+        "AI의 예측과 적중률을 실시간으로 공개",
+        "난이도 3단계와 최고 연속 승리 기록",
+        "키보드 1·2·3으로 바로 플레이"
+      ],
+      "tags": ["가위바위보", "AI", "두뇌", "게임", "패턴분석"],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-23/rps-mind/",
+      "path": "apps/2026-11-23/rps-mind/"
+    },
+    {
+      "slug": "subs-dashboard",
+      "name": "구독 지옥 대시보드",
+      "date": "2026-11-23",
+      "category": "finance",
+      "icon": "💸",
+      "accent": "#4fd1c5",
+      "summary": "흩어진 구독료를 한 장에, 월·연 환산",
+      "description": "넷플릭스·유튜브·AI 툴까지 흩어진 구독료를 한곳에 모아 월·연 지출과 갱신일, 해지 후보를 한눈에 보는 대시보드입니다. 결제 주기가 달라도 월 기준으로 환산해 실제 부담을 드러냅니다.",
+      "features": [
+        "월·연·주 결제 주기를 월 기준으로 환산해 합산",
+        "분류별 SVG 도넛 차트로 지출 비중 확인",
+        "다음 결제일 D-day와 무료체험 종료 경고",
+        "월 예산 초과 알림",
+        "항목 수정·삭제와 CSV 내보내기"
+      ],
+      "tags": ["구독", "가계부", "절약", "대시보드", "금융"],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-23/subs-dashboard/",
+      "path": "apps/2026-11-23/subs-dashboard/"
+    }
+  ]
+}

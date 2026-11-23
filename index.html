@@ -15,6 +15,15 @@
       radial-gradient(900px 480px at 100% 0%,rgba(139,123,255,.15),transparent 58%),linear-gradient(180deg,#0d1117,#0a0e13);
     -webkit-font-smoothing:antialiased;line-height:1.6}
   .wrap{max-width:920px;margin:0 auto;padding:46px 18px 70px}
+  .topline{display:flex;justify-content:flex-end;margin-bottom:22px}
+  a.pf-badge{display:inline-flex;align-items:center;gap:8px;text-decoration:none;
+    background:linear-gradient(120deg,rgba(94,233,166,.16),rgba(139,123,255,.18));
+    border:1px solid rgba(94,233,166,.35);border-radius:999px;padding:8px 15px;
+    font-size:13px;font-weight:800;color:#d7fbe8;letter-spacing:-.2px;
+    box-shadow:0 12px 28px -22px #5ee9a6;transition:transform .16s,border-color .16s,box-shadow .2s}
+  a.pf-badge:hover{transform:translateY(-2px);border-color:rgba(94,233,166,.65);box-shadow:0 18px 34px -22px #5ee9a6}
+  a.pf-badge .arrow{transition:transform .18s;color:#5ee9a6}
+  a.pf-badge:hover .arrow{transform:translateX(3px)}
   header{border-bottom:1px solid var(--line);padding-bottom:22px;margin-bottom:30px}
   h1{font-size:clamp(25px,5vw,34px);letter-spacing:-.9px;margin:0 0 8px}
   .sub{color:var(--dim);font-size:14px;margin:0}
@@ -47,6 +56,9 @@
 </head>
 <body>
 <div class="wrap">
+  <div class="topline">
+    <a class="pf-badge" href="./portfolio/">✨ 포트폴리오 보기 <span class="arrow" aria-hidden="true">→</span></a>
+  </div>
   <header>
     <h1>매일 웹앱 3종</h1>
     <p class="sub">설치도 로그인도 없이 브라우저에서 바로 쓰는 웹앱 아카이브입니다. 매일 3개씩 새로 추가됩니다.</p>
@@ -87,7 +99,7 @@
 
   <footer>
     <span>매일 오전, 새 웹앱 3개가 이 목록에 추가됩니다.</span>
-    <span><a href="https://github.com/paradevlab7-cmyk/Webapp" target="_blank" rel="noopener">GitHub 저장소</a> · 경로 <code>apps/YYYY-MM-DD/{slug}/</code></span>
+    <span><a href="./portfolio/">포트폴리오</a> · <a href="https://github.com/paradevlab7-cmyk/Webapp" target="_blank" rel="noopener">GitHub 저장소</a> · 경로 <code>apps/YYYY-MM-DD/{slug}/</code></span>
   </footer>
 </div>
 </body>
