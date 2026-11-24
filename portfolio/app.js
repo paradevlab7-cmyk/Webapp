@@ -7,6 +7,7 @@
 
   var FAV_KEY = 'portfolio:favs:v1';
   var THEME_KEY = 'portfolio:theme:v1';
+  var VIEW_KEY = 'portfolio:view:v1';
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
 
@@ -18,6 +19,7 @@
     sort: $('#sortSelect'),
     favFilter: $('#favFilter'),
     favCount: $('#favCount'),
+    groupToggle: $('#groupToggle'),
     resultLine: $('#resultLine'),
     empty: $('#empty'),
     resetAll: $('#resetAll'),
@@ -48,6 +50,7 @@
     query: '',
     sort: 'new',
     favOnly: false,
+    group: loadView() === 'day',
     favs: loadFavs(),
     lastFocus: null,
     openSlug: null
@@ -64,6 +67,13 @@
     try { localStorage.setItem(FAV_KEY, JSON.stringify(state.favs)); } catch (e) {}
   }
   function isFav(slug) { return state.favs.indexOf(slug) !== -1; }
+
+  function loadView() {
+    try { return localStorage.getItem(VIEW_KEY) === 'day' ? 'day' : 'grid'; } catch (e) { return 'grid'; }
+  }
+  function saveView() {
+    try { localStorage.setItem(VIEW_KEY, state.group ? 'day' : 'grid'); } catch (e) {}
+  }
 
   /* ------------------------------ 유틸 ------------------------------ */
   function esc(str) {
@@ -250,9 +260,78 @@
   }
 
   /* ------------------------------ 카드 ------------------------------ */
+  function latestDate() {
+    var d = '';
+    state.apps.forEach(function (a) { if (a.date && a.date > d) d = a.date; });
+    return d;
+  }
+
+  function cardHtml(a, i, toks) {
+    var c = catOf(a.category);
+    var accent = a.accent || 'var(--accent)';
+    var tags = a.tags.slice(0, 3).map(function (t) { return '<span class="tag">' + highlight(t, toks) + '</span>'; });
+    if (a.tags.length > 3) tags.push('<span class="tag more">+' + (a.tags.length - 3) + '</span>');
+    var fav = isFav(a.slug);
+    var isNew = !!state.latest && a.date === state.latest;
+
+    return '' +
+      '<article class="card" role="button" tabindex="0" data-slug="' + esc(a.slug) + '"' +
+      ' data-cat="' + esc(a.category) + '" data-name="' + esc(a.name) + '" data-date="' + esc(a.date) + '"' +
+      ' aria-label="' + esc(a.name + ' 상세 보기') + '"' +
+      ' style="--c:' + esc(accent) + ';--d:' + Math.min(i * 45, 320) + 'ms">' +
+        '<div class="card-top">' +
+          '<div class="app-ico" aria-hidden="true">' + esc(a.icon || '◈') + '</div>' +
+          '<div class="card-head">' +
+            '<h3 class="app-name">' + highlight(a.name, toks) + '</h3>' +
+            '<div class="app-meta">' +
+              '<span class="cat-pill">' + esc((c.icon ? c.icon + ' ' : '') + c.label) + '</span>' +
+              '<span class="sep" aria-hidden="true">·</span>' +
+              '<span>' + fmtDate(a.date) + '</span>' +
+              (isNew ? '<span class="new-badge" aria-label="새로 추가됨">NEW</span>' : '') +
+            '</div>' +
+          '</div>' +
+        '</div>' +
+        '<button class="fav" type="button" data-fav="' + esc(a.slug) + '" aria-pressed="' + (fav ? 'true' : 'false') + '"' +
+          ' aria-label="' + esc(a.name + (fav ? ' 즐겨찾기 해제' : ' 즐겨찾기 추가')) + '" title="즐겨찾기">★</button>' +
+        '<p class="app-summary">' + highlight(a.summary || '', toks) + '</p>' +
+        '<div class="tags">' + tags.join('') + '</div>' +
+        '<div class="card-foot">' +
+          '<span class="card-date">' + relDays(a.date) + ' 등록</span>' +
+          '<span class="card-open">자세히 <span aria-hidden="true">→</span></span>' +
+        '</div>' +
+      '</article>';
+  }
+
+  /** 날짜별 그룹 보기: 같은 날 만든 앱을 한 묶음으로 보여 준다. */
+  function groupHtml(list, toks) {
+    var order = [], byDate = {};
+    list.forEach(function (a) {
+      var d = a.date || '';
+      if (!byDate[d]) { byDate[d] = []; order.push(d); }
+      byDate[d].push(a);
+    });
+    order.sort(function (x, y) { return x < y ? 1 : x > y ? -1 : 0; });
+
+    return order.map(function (d) {
+      var arr = byDate[d];
+      return '<section class="daygroup" data-date="' + esc(d) + '" aria-label="' + fmtDate(d) + ' · ' + arr.length + '개">' +
+        '<div class="daygroup-head">' +
+          '<span class="dg-date">' + fmtDate(d) + '</span>' +
+          (d === state.latest ? '<span class="new-badge">NEW</span>' : '') +
+          '<span class="dg-rel">' + relDays(d) + '</span>' +
+          '<span class="dg-n">' + arr.length + '개</span>' +
+        '</div>' +
+        '<div class="daygroup-cards">' +
+          arr.map(function (a) { return cardHtml(a, list.indexOf(a), toks); }).join('') +
+        '</div>' +
+      '</section>';
+    }).join('');
+  }
+
   function render() {
     var toks = tokens(state.query);
     var list = visibleApps();
+    state.latest = latestDate();
 
     // 즐겨찾기 필터·개수 표시
     el.favCount.textContent = state.favs.filter(function (s) {
@@ -266,7 +345,8 @@
       el.resultLine.innerHTML = '<b>' + list.length + '</b>개 앱 · ' + esc(label) +
         (state.favOnly ? ' · 즐겨찾기' : '') +
         (state.query ? ' · “' + esc(state.query) + '” 검색' : '') +
-        ' · ' + (state.sort === 'name' ? '이름순' : state.sort === 'old' ? '오래된순' : '최신순');
+        ' · ' + (state.sort === 'name' ? '이름순' : state.sort === 'old' ? '오래된순' : '최신순') +
+        (state.group ? ' · 날짜별' : '');
     } else {
       el.resultLine.textContent = '';
     }
@@ -274,41 +354,11 @@
     el.empty.hidden = list.length > 0 || !state.apps.length;
     el.grid.hidden = list.length === 0 && state.apps.length > 0;
 
-    var html = list.map(function (a, i) {
-      var c = catOf(a.category);
-      var accent = a.accent || 'var(--accent)';
-      var tags = a.tags.slice(0, 3).map(function (t) { return '<span class="tag">' + highlight(t, toks) + '</span>'; });
-      if (a.tags.length > 3) tags.push('<span class="tag more">+' + (a.tags.length - 3) + '</span>');
-      var fav = isFav(a.slug);
-
-      return '' +
-        '<article class="card" role="button" tabindex="0" data-slug="' + esc(a.slug) + '"' +
-        ' data-cat="' + esc(a.category) + '" data-name="' + esc(a.name) + '"' +
-        ' aria-label="' + esc(a.name + ' 상세 보기') + '"' +
-        ' style="--c:' + esc(accent) + ';--d:' + Math.min(i * 45, 320) + 'ms">' +
-          '<div class="card-top">' +
-            '<div class="app-ico" aria-hidden="true">' + esc(a.icon || '◈') + '</div>' +
-            '<div class="card-head">' +
-              '<h3 class="app-name">' + highlight(a.name, toks) + '</h3>' +
-              '<div class="app-meta">' +
-                '<span class="cat-pill">' + esc((c.icon ? c.icon + ' ' : '') + c.label) + '</span>' +
-                '<span class="sep" aria-hidden="true">·</span>' +
-                '<span>' + fmtDate(a.date) + '</span>' +
-              '</div>' +
-            '</div>' +
-          '</div>' +
-          '<button class="fav" type="button" data-fav="' + esc(a.slug) + '" aria-pressed="' + (fav ? 'true' : 'false') + '"' +
-            ' aria-label="' + esc(a.name + (fav ? ' 즐겨찾기 해제' : ' 즐겨찾기 추가')) + '" title="즐겨찾기">★</button>' +
-          '<p class="app-summary">' + highlight(a.summary || '', toks) + '</p>' +
-          '<div class="tags">' + tags.join('') + '</div>' +
-          '<div class="card-foot">' +
-            '<span class="card-date">' + relDays(a.date) + ' 등록</span>' +
-            '<span class="card-open">자세히 <span aria-hidden="true">→</span></span>' +
-          '</div>' +
-        '</article>';
-    }).join('');
-
-    el.grid.innerHTML = html;
+    el.grid.classList.toggle('grouped', state.group);
+    el.groupToggle.setAttribute('aria-pressed', state.group ? 'true' : 'false');
+    el.grid.innerHTML = state.group
+      ? groupHtml(list, toks)
+      : list.map(function (a, i) { return cardHtml(a, i, toks); }).join('');
 
     // 모달이 열린 앱이 필터에서 사라졌다면 닫는다
     if (state.openSlug && !list.some(function (a) { return a.slug === state.openSlug; })) closeModal(true);
@@ -463,6 +513,13 @@
   });
 
   el.sort.addEventListener('change', function () { state.sort = this.value; render(); });
+
+  el.groupToggle.addEventListener('click', function () {
+    state.group = !state.group;
+    saveView();
+    render();
+    toast(state.group ? '날짜별로 묶어서 봅니다' : '한 화면 그리드로 봅니다');
+  });
 
   el.favFilter.addEventListener('click', function () {
     state.favOnly = !state.favOnly;

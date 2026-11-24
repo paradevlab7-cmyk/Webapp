@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101a17">
+<title>N빵 정산기 — 모임 회비, 3초 만에 정리</title>
+<meta name="description" content="모임에서 누가 얼마를 냈고 누가 얼마를 써야 하는지, 항목마다 다른 참여자까지 반영해 가장 적은 송금 횟수로 정산합니다.">
+<style>
+  :root{
+    --bg:#0d1512; --bg-2:#101c18; --ink:#eaf3ee; --ink-2:#c3d2ca; --dim:#86988f;
+    --line:rgba(233,255,244,.10); --line-2:rgba(233,255,244,.18);
+    --card:#131f1b; --card-2:#17251f;
+    --mint:#5ee9a6; --mint-ink:#04241a; --lime:#c8f27a; --rose:#ff8f8f; --sky:#8fd8ff;
+    --radius:16px;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    min-height:100vh;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    line-height:1.55;-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(900px 460px at 6% -8%,rgba(94,233,166,.13),transparent 62%),
+      radial-gradient(760px 420px at 102% 4%,rgba(200,242,122,.09),transparent 58%),
+      repeating-linear-gradient(0deg,rgba(255,255,255,.022) 0 1px,transparent 1px 28px),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.018) 0 1px,transparent 1px 28px),
+      linear-gradient(180deg,var(--bg),#0a110e 70%);
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:26px 16px 90px}
+  @media(min-width:720px){.wrap{padding:44px 26px 100px}}
+
+  /* ---------- header ---------- */
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+  .brand{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;letter-spacing:.02em;
+    color:var(--mint);text-decoration:none}
+  .brand .mark{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;
+    background:linear-gradient(150deg,rgba(94,233,166,.28),rgba(200,242,122,.16));
+    border:1px solid rgba(94,233,166,.42);font-size:13px}
+  .brand .back{margin-left:6px;color:var(--dim);font-weight:600;border-left:1px solid var(--line-2);padding-left:10px}
+  .brand .back:hover{color:var(--ink-2)}
+  h1{margin:0 0 8px;font-size:clamp(26px,6vw,38px);letter-spacing:-.035em;line-height:1.16}
+  h1 em{font-style:normal;color:var(--mint)}
+  .lede{margin:0;color:var(--dim);font-size:13.5px;max-width:56ch}
+  .hero{margin-bottom:24px}
+
+  /* ---------- generic ---------- */
+  .card{background:linear-gradient(180deg,var(--card),rgba(19,31,27,.65));
+    border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  @media(min-width:720px){.card{padding:20px}}
+  .sec-head{display:flex;align-items:center;gap:9px;margin:0 0 4px}
+  .sec-num{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;flex:0 0 auto;
+    background:rgba(94,233,166,.13);border:1px solid rgba(94,233,166,.28);color:var(--mint);
+    font-size:11.5px;font-weight:800;font-variant-numeric:tabular-nums}
+  h2{margin:0;font-size:15.5px;letter-spacing:-.02em}
+  .hint{color:var(--dim);font-size:12.5px;margin:0 0 14px;padding-left:31px}
+
+  .layout{display:grid;gap:16px;align-items:start}
+  @media(min-width:980px){.layout{grid-template-columns:minmax(0,1fr) 366px;gap:20px}}
+  .col{display:grid;gap:16px;min-width:0}
+
+  label{font-size:12px;font-weight:700;color:var(--ink-2);display:block;margin-bottom:5px}
+  input,select,button{font:inherit;color:inherit}
+  input,select{
+    width:100%;background:var(--bg-2);border:1px solid var(--line);border-radius:11px;
+    padding:11px 12px;font-size:14px;transition:border-color .15s,box-shadow .18s,background .15s;
+    min-width:0;
+  }
+  input::placeholder{color:#61736b}
+  input:hover,select:hover{border-color:var(--line-2)}
+  input:focus,select:focus{outline:none;border-color:rgba(94,233,166,.6);
+    box-shadow:0 0 0 3px rgba(94,233,166,.14);background:var(--card-2)}
+  input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+  input[type=number]{-moz-appearance:textfield;appearance:textfield;font-variant-numeric:tabular-nums}
+  select{appearance:none;-webkit-appearance:none;
+    background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%);
+    background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;
+    background-size:5px 5px,5px 5px;background-repeat:no-repeat;padding-right:32px;cursor:pointer}
+
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;
+    border-radius:11px;padding:11px 15px;font-size:13.5px;font-weight:800;letter-spacing:-.01em;
+    border:1px solid var(--line);background:var(--card-2);color:var(--ink);cursor:pointer;
+    transition:transform .14s,background .15s,border-color .15s,box-shadow .2s;white-space:nowrap}
+  .btn:hover{transform:translateY(-1px);border-color:var(--line-2);background:#1b2b24}
+  .btn:active{transform:translateY(0)}
+  .btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(94,233,166,.28)}
+  .btn-primary{background:linear-gradient(150deg,var(--mint),#43d68f);color:var(--mint-ink);border-color:transparent;
+    box-shadow:0 12px 26px -18px var(--mint)}
+  .btn-primary:hover{background:linear-gradient(150deg,#6df0b2,#4ee09a)}
+  .btn-quiet{background:transparent}
+  .btn-sm{padding:8px 11px;font-size:12.5px;border-radius:9px}
+  .btn[disabled]{opacity:.45;cursor:not-allowed;transform:none}
+
+  .row{display:flex;gap:8px;flex-wrap:wrap}
+  .row > .grow{flex:1 1 160px;min-width:0}
+
+  /* ---------- 참여자 ---------- */
+  .people{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px;padding:0;list-style:none}
+  .person{display:inline-flex;align-items:center;gap:7px;
+    background:rgba(94,233,166,.09);border:1px solid rgba(94,233,166,.26);
+    border-radius:999px;padding:5px 6px 5px 12px;font-size:13px;font-weight:700;max-width:100%}
+  .person .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:13ch}
+  .person .dot{width:7px;height:7px;border-radius:50%;flex:0 0 auto;background:var(--mint)}
+  .person button{width:20px;height:20px;border-radius:50%;border:0;background:rgba(255,255,255,.08);
+    color:var(--ink-2);font-size:11px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+  .person button:hover{background:rgba(255,143,143,.25);color:#ffdada}
+  .people-empty{color:var(--dim);font-size:12.5px;margin:0 0 12px}
+
+  /* ---------- 항목 폼 ---------- */
+  .form{display:grid;gap:11px;padding:14px;border:1px dashed var(--line-2);border-radius:13px;
+    background:rgba(255,255,255,.018);margin-bottom:14px}
+  .form-grid{display:grid;gap:10px}
+  @media(min-width:560px){.form-grid{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;
+    border:1px solid var(--line);background:transparent;color:var(--dim);font-size:12.5px;font-weight:700;
+    cursor:pointer;transition:all .14s;max-width:100%}
+  .chip .t{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:12ch}
+  .chip:hover{border-color:var(--line-2);color:var(--ink-2)}
+  .chip[aria-pressed="true"]{background:rgba(94,233,166,.14);border-color:rgba(94,233,166,.45);color:#d6ffee}
+  .chip[aria-pressed="true"] .tick{opacity:1}
+  .chip .tick{opacity:.25;font-size:10px}
+  .micro{font-size:11.5px;color:#6c7f76;margin:0}
+
+  /* ---------- 항목 목록 ---------- */
+  .items{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .item{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;align-items:center;
+    padding:11px 12px;border-radius:12px;background:rgba(255,255,255,.028);border:1px solid var(--line)}
+  .item .nm{font-size:13.5px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .meta{font-size:11.5px;color:var(--dim);grid-column:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .item .amt{font-family:var(--mono);font-size:14px;font-weight:700;text-align:right;font-variant-numeric:tabular-nums;
+    white-space:nowrap;grid-row:1;grid-column:2}
+  .item .del{grid-row:1 / span 2;grid-column:3;width:26px;height:26px;border-radius:8px;border:1px solid transparent;
+    background:transparent;color:#6f8479;cursor:pointer;font-size:13px;display:grid;place-items:center;padding:0}
+  .item .del:hover{color:#ffc7c7;background:rgba(255,143,143,.14);border-color:rgba(255,143,143,.3)}
+  .item{grid-template-columns:minmax(0,1fr) auto auto}
+  .items-empty{padding:16px;text-align:center;color:var(--dim);font-size:12.5px;
+    border:1px dashed var(--line-2);border-radius:12px}
+
+  /* ---------- 요약(영수증) ---------- */
+  .receipt{position:relative;background:linear-gradient(180deg,#14211c,#111c18);
+    border:1px solid var(--line-2);border-radius:18px;padding:18px 16px 16px;overflow:hidden}
+  @media(min-width:980px){.receipt{position:sticky;top:18px}}
+  .receipt::before{content:"";position:absolute;inset:0 0 auto;height:3px;
+    background:linear-gradient(90deg,var(--mint),var(--lime),transparent)}
+  .r-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:2px}
+  .r-title h2{font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-2)}
+  .r-title .stamp{font-family:var(--mono);font-size:10.5px;color:#7e938a;letter-spacing:.04em}
+  .dash{height:1px;margin:12px 0;background:repeating-linear-gradient(90deg,var(--line-2) 0 5px,transparent 5px 11px)}
+  .totals{display:grid;gap:7px;margin:0}
+  .totals div{display:flex;justify-content:space-between;gap:10px;font-size:13px;color:var(--ink-2)}
+  .totals dt{color:var(--dim);font-size:12.5px}
+  .totals dd{margin:0;font-family:var(--mono);font-variant-numeric:tabular-nums;font-weight:700;color:var(--ink)}
+  .totals .big dd{font-size:17px;color:var(--mint)}
+
+  .balances{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+  .bal{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;
+    font-size:12.5px;padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.025)}
+  .bal .who{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+  .bal .paid{color:#7e938a;font-family:var(--mono);font-size:11.5px;font-variant-numeric:tabular-nums}
+  .bal .net{font-family:var(--mono);font-weight:800;font-variant-numeric:tabular-nums;font-size:12.5px}
+  .bal .net.plus{color:var(--mint)}
+  .bal .net.minus{color:var(--rose)}
+  .bal .net.zero{color:#6f8479}
+
+  .transfers{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+  .tr{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto;gap:8px;align-items:center;
+    padding:10px 11px;border-radius:11px;background:rgba(94,233,166,.07);
+    border:1px solid rgba(94,233,166,.2);font-size:13px}
+  .tr .to,.tr .from{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:700}
+  .tr .arrow{color:var(--mint);font-size:12px}
+  .tr .val{font-family:var(--mono);font-weight:800;font-variant-numeric:tabular-nums;color:#d6ffee;white-space:nowrap}
+  .done{padding:16px 12px;border-radius:12px;border:1px dashed rgba(94,233,166,.35);
+    background:rgba(94,233,166,.06);text-align:center;font-size:13px;color:#c9ffe6}
+
+  .r-actions{display:grid;gap:8px;margin-top:14px}
+  .r-actions .row{display:grid;grid-template-columns:1fr auto}
+  .copied{color:var(--mint);font-size:11.5px;text-align:center;min-height:16px;margin-top:6px}
+
+  .foot{margin-top:22px;color:#66786f;font-size:11.5px;text-align:center;line-height:1.7}
+  .foot a{color:#93a79e}
+
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);z-index:60;
+    background:#eafff4;color:#08231a;font-size:12.5px;font-weight:800;padding:9px 15px;border-radius:999px;
+    box-shadow:0 18px 40px -18px #000;opacity:0;pointer-events:none;transition:opacity .22s,transform .22s}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  .sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <a class="brand" href="../../../"><span class="mark" aria-hidden="true">◈</span>매일 만드는 웹앱<span class="back">아카이브</span></a>
+    <span style="font-size:11.5px;color:#66786f">기록은 이 브라우저에만 저장됩니다</span>
+  </div>
+
+  <header class="hero">
+    <h1>모임 회비, <em>N빵</em>으로 끝</h1>
+    <p class="lede">누가 얼마를 냈고, 누가 어디에 참여했는지만 넣으면 됩니다. 1,000원도 안 틀어지게 나누고, 송금은 가장 적은 횟수로 알려드려요.</p>
+  </header>
+
+  <div class="layout">
+    <!-- ============ 왼쪽: 입력 ============ -->
+    <div class="col">
+
+      <!-- 참여자 -->
+      <section class="card" aria-labelledby="h-people">
+        <div class="sec-head"><span class="sec-num">1</span><h2 id="h-people">누가 모였나요</h2></div>
+        <p class="hint">이름만 넣으면 참여자 칸에 바로 추가됩니다.</p>
+        <ul class="people" id="people"></ul>
+        <p class="people-empty" id="peopleEmpty">아직 참여자가 없습니다. 아래에 이름을 넣어 주세요.</p>
+        <form class="row" id="personForm" autocomplete="off">
+          <div class="grow"><label class="sr" for="personName">참여자 이름</label>
+            <input id="personName" maxlength="12" placeholder="예: 민수" enterkeyhint="done"></div>
+          <button class="btn" type="submit" id="addPerson">추가</button>
+        </form>
+      </section>
+
+      <!-- 지출 -->
+      <section class="card" aria-labelledby="h-items">
+        <div class="sec-head"><span class="sec-num">2</span><h2 id="h-items">무엇에 얼마를 썼나요</h2></div>
+        <p class="hint">항목마다 참여자가 다르면 체크를 풀어 주세요. 결제한 사람을 고르면 자동으로 계산됩니다.</p>
+
+        <div class="form" id="itemForm">
+          <div class="form-grid">
+            <div><label for="itemName">항목</label>
+              <input id="itemName" maxlength="24" placeholder="예: 삼겹살" autocomplete="off"></div>
+            <div><label for="itemAmount">금액(원)</label>
+              <input id="itemAmount" type="number" inputmode="numeric" min="0" step="100" placeholder="30000"></div>
+          </div>
+          <div class="form-grid">
+            <div><label for="itemPayer">결제한 사람</label><select id="itemPayer"></select></div>
+            <div><label>나눌 사람 <span id="pickCount" style="color:var(--mint);font-weight:800">0</span></label>
+              <div class="chips" id="itemParticipants" role="group" aria-label="이 항목을 나눌 사람"></div></div>
+          </div>
+          <div class="row" style="justify-content:space-between;align-items:center">
+            <p class="micro" id="perHead">참여자를 먼저 추가해 주세요.</p>
+            <button class="btn btn-primary" type="button" id="addItem">＋ 항목 추가</button>
+          </div>
+        </div>
+
+        <ul class="items" id="items"></ul>
+        <div class="items-empty" id="itemsEmpty">아직 항목이 없습니다. 위에서 첫 지출을 추가해 보세요.</div>
+      </section>
+    </div>
+
+    <!-- ============ 오른쪽: 영수증 ============ -->
+    <aside class="col">
+      <section class="receipt" id="receipt" aria-labelledby="h-result">
+        <div class="r-title">
+          <h2 id="h-result">정산 영수증</h2>
+          <span class="stamp" id="stamp">NO. ----</span>
+        </div>
+
+        <dl class="totals" style="margin-top:12px">
+          <div><dt>총 지출</dt><dd id="sumTotal">0원</dd></div>
+          <div><dt>참여 인원</dt><dd id="sumPeople">0명</dd></div>
+          <div class="big"><dt>1인 평균</dt><dd id="sumAvg">0원</dd></div>
+        </dl>
+
+        <div class="dash" role="presentation"></div>
+        <p class="micro" style="margin-bottom:8px;letter-spacing:.06em;font-weight:800;color:#8fa79c">사람별 차액</p>
+        <ul class="balances" id="balances"></ul>
+
+        <div class="dash" role="presentation"></div>
+        <p class="micro" style="margin-bottom:8px;letter-spacing:.06em;font-weight:800;color:#8fa79c">이렇게 보내면 끝</p>
+        <ul class="transfers" id="transfers"></ul>
+        <div class="done" id="allDone" hidden>🎉 보낼 돈이 없어요. 이미 딱 맞습니다.</div>
+
+        <div class="r-actions">
+          <div class="row">
+            <button class="btn btn-primary" type="button" id="copyBtn">정산 결과 복사</button>
+            <button class="btn btn-quiet" type="button" id="exampleBtn" title="예시 데이터로 채우기">예시</button>
+          </div>
+          <button class="btn btn-quiet btn-sm" type="button" id="resetBtn">전체 지우기</button>
+          <div class="copied" id="copiedMsg" role="status" aria-live="polite"></div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <p class="foot">금액은 원 단위로 나누고, 나눠지지 않는 나머지는 목록 순서대로 1원씩 배분합니다.<br>송금은 서로 주고받을 금액을 상계해 최소 횟수로 묶습니다.</p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'splitbill:v1';
+  var COLORS = ['#5ee9a6','#8fd8ff','#c8f27a','#ffc98f','#c9a9ff','#ff9fc4','#8fe3d0','#ffb3a7'];
+
+  var el = {
+    people: document.getElementById('people'),
+    peopleEmpty: document.getElementById('peopleEmpty'),
+    personForm: document.getElementById('personForm'),
+    personName: document.getElementById('personName'),
+    payer: document.getElementById('itemPayer'),
+    picks: document.getElementById('itemParticipants'),
+    pickCount: document.getElementById('pickCount'),
+    perHead: document.getElementById('perHead'),
+    itemName: document.getElementById('itemName'),
+    itemAmount: document.getElementById('itemAmount'),
+    addItem: document.getElementById('addItem'),
+    items: document.getElementById('items'),
+    itemsEmpty: document.getElementById('itemsEmpty'),
+    sumTotal: document.getElementById('sumTotal'),
+    sumPeople: document.getElementById('sumPeople'),
+    sumAvg: document.getElementById('sumAvg'),
+    balances: document.getElementById('balances'),
+    transfers: document.getElementById('transfers'),
+    allDone: document.getElementById('allDone'),
+    stamp: document.getElementById('stamp'),
+    copyBtn: document.getElementById('copyBtn'),
+    exampleBtn: document.getElementById('exampleBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    copiedMsg: document.getElementById('copiedMsg'),
+    toast: document.getElementById('toast')
+  };
+
+  var state = {
+    people: [],          // [{id, name}]
+    items: [],           // [{id, name, amount, payer, share:[ids]}]
+    picks: []            // 새 항목에 기본 선택될 참여자 id
+  };
+  var seq = 0;
+
+  function uid(p){ seq++; return (p||'x') + '_' + Date.now().toString(36) + seq; }
+
+  /* ---------------- 저장 ---------------- */
+  function save(){
+    try {
+      localStorage.setItem(KEY, JSON.stringify({people:state.people, items:state.items}));
+    } catch(e){}
+  }
+  function load(){
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!raw || !Array.isArray(raw.people)) return;
+      state.people = raw.people.filter(function(p){ return p && p.id && p.name; });
+      state.items = (Array.isArray(raw.items) ? raw.items : []).filter(function(it){
+        return it && it.id && typeof it.amount === 'number' && it.payer;
+      }).map(function(it){
+        it.share = Array.isArray(it.share) ? it.share.filter(function(id){
+          return state.people.some(function(p){ return p.id === id; });
+        }) : [];
+        return it;
+      });
+    } catch(e){}
+  }
+
+  /* ---------------- 유틸 ---------------- */
+  function won(n){ return (Math.round(n)||0).toLocaleString('ko-KR') + '원'; }
+  function nameOf(id){
+    for (var i=0;i<state.people.length;i++) if (state.people[i].id === id) return state.people[i].name;
+    return '?';
+  }
+  function colorOf(id){
+    var idx = 0;
+    for (var i=0;i<state.people.length;i++) if (state.people[i].id === id) idx = i;
+    return COLORS[idx % COLORS.length];
+  }
+  function toast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ el.toast.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------------- 참여자 ---------------- */
+  function addPerson(name){
+    name = String(name||'').trim().replace(/\s+/g,' ');
+    if (!name) { toast('이름을 입력해 주세요'); return false; }
+    if (name.length > 12) name = name.slice(0,12);
+    var dup = state.people.some(function(p){ return p.name === name; });
+    if (dup) { toast('이미 있는 이름이에요'); return false; }
+    if (state.people.length >= 20) { toast('참여자는 20명까지 가능해요'); return false; }
+    var p = { id: uid('p'), name: name };
+    state.people.push(p);
+    state.picks.push(p.id);
+    state.items.forEach(function(it){
+      // 새로 들어온 사람은 기존 항목의 분담에서 제외 (결제자가 될 수는 있음)
+      it.share = it.share.filter(function(x){ return x !== p.id; });
+    });
+    save(); render();
+    return true;
+  }
+
+  function removePerson(id){
+    state.people = state.people.filter(function(p){ return p.id !== id; });
+    state.picks = state.picks.filter(function(x){ return x !== id; });
+    state.items = state.items.filter(function(it){ return it.payer !== id; })
+      .map(function(it){
+        it.share = it.share.filter(function(x){ return x !== id; });
+        return it;
+      });
+    save(); render();
+  }
+
+  function renderPeople(){
+    if (!state.people.length){
+      el.people.innerHTML = '';
+      el.peopleEmpty.hidden = false;
+      return;
+    }
+    el.peopleEmpty.hidden = true;
+    el.people.innerHTML = state.people.map(function(p){
+      return '<li class="person"><span class="dot" style="background:' + colorOf(p.id) + '"></span>' +
+        '<span class="nm">' + esc(p.name) + '</span>' +
+        '<button type="button" data-del-person="' + esc(p.id) + '" aria-label="' + esc(p.name) + ' 삭제">✕</button></li>';
+    }).join('');
+  }
+
+  /* ---------------- 선택 칩·결제자 ---------------- */
+  function renderPickers(){
+    var opts = state.people.map(function(p){
+      return '<option value="' + esc(p.id) + '">' + esc(p.name) + '</option>';
+    }).join('');
+    var prev = el.payer.value;
+    el.payer.innerHTML = state.people.length ? opts : '<option value="">참여자를 먼저 추가</option>';
+    if (state.people.some(function(p){ return p.id === prev; })) el.payer.value = prev;
+    el.payer.disabled = !state.people.length;
+
+    // 기본 선택: state.picks 중 실제 존재하는 사람
+    state.picks = state.picks.filter(function(id){
+      return state.people.some(function(p){ return p.id === id; });
+    });
+    el.picks.innerHTML = state.people.map(function(p){
+      var on = state.picks.indexOf(p.id) !== -1;
+      return '<button type="button" class="chip" data-pick="' + esc(p.id) + '" aria-pressed="' + (on?'true':'false') + '">' +
+        '<span class="tick" aria-hidden="true">✓</span><span class="t">' + esc(p.name) + '</span></button>';
+    }).join('');
+    updatePerHead();
+  }
+
+  function updatePerHead(){
+    var amount = Math.max(0, Math.round(Number(el.itemAmount.value) || 0));
+    var n = state.picks.length;
+    el.pickCount.textContent = n + '명';
+    if (!state.people.length){ el.perHead.textContent = '참여자를 먼저 추가해 주세요.'; return; }
+    if (!n){ el.perHead.textContent = '나눌 사람을 한 명 이상 골라 주세요.'; return; }
+    if (!amount){ el.perHead.textContent = '금액을 넣으면 1인당 부담이 표시됩니다.'; return; }
+    var base = Math.floor(amount / n);
+    el.perHead.textContent = '1인당 ' + won(base) + (amount % n ? ' (나머지 ' + (amount%n) + '원은 1원씩 더)' : '');
+  }
+
+  /* ---------------- 항목 ---------------- */
+  function addItem(){
+    if (!state.people.length){ toast('참여자를 먼저 추가해 주세요'); return; }
+    var name = String(el.itemName.value||'').trim();
+    var amount = Math.round(Number(el.itemAmount.value));
+    if (!name){ el.itemName.focus(); toast('항목 이름을 넣어 주세요'); return; }
+    if (!isFinite(amount) || amount <= 0){ el.itemAmount.focus(); toast('금액을 1원 이상 넣어 주세요'); return; }
+    if (amount > 100000000){ toast('금액이 너무 큽니다'); return; }
+    if (!state.picks.length){ toast('나눌 사람을 골라 주세요'); return; }
+    state.items.push({
+      id: uid('i'), name: name.slice(0,24), amount: amount,
+      payer: el.payer.value || state.people[0].id,
+      share: state.picks.slice()
+    });
+    el.itemName.value = '';
+    el.itemAmount.value = '';
+    save(); render();
+    el.itemName.focus();
+    toast('항목을 추가했어요');
+  }
+
+  function removeItem(id){
+    state.items = state.items.filter(function(it){ return it.id !== id; });
+    save(); render();
+  }
+
+  function renderItems(){
+    var empty = !state.items.length;
+    el.itemsEmpty.hidden = !empty;
+    el.items.innerHTML = state.items.map(function(it){
+      var sharers = it.share.map(nameOf);
+      var meta = '결제 ' + nameOf(it.payer) + ' · ' + it.share.length + '명이 나눔';
+      if (sharers.length && sharers.length <= 3) meta += ' (' + sharers.join(', ') + ')';
+      return '<li class="item">' +
+        '<span class="nm">' + esc(it.name) + '</span>' +
+        '<span class="amt">' + won(it.amount) + '</span>' +
+        '<button class="del" type="button" data-del-item="' + esc(it.id) + '" aria-label="' + esc(it.name) + ' 삭제">✕</button>' +
+        '<span class="meta">' + esc(meta) + '</span>' +
+      '</li>';
+    }).join('');
+  }
+
+  /* ---------------- 계산 ---------------- */
+  /** 금액을 n명에게 원 단위로 나눈다. 나머지는 앞사람부터 1원씩. */
+  function shareOut(amount, ids){
+    var out = {}, n = ids.length;
+    if (!n) return out;
+    var base = Math.floor(amount / n), rem = amount - base * n;
+    for (var i=0;i<n;i++){
+      out[ids[i]] = base + (i < rem ? 1 : 0);
+    }
+    return out;
+  }
+
+  function compute(){
+    var res = {};
+    state.people.forEach(function(p){ res[p.id] = { id:p.id, name:p.name, paid:0, owed:0, net:0 }; });
+
+    state.items.forEach(function(it){
+      var sharers = it.share.filter(function(id){ return res[id]; });
+      if (!sharers.length) sharers = state.people.map(function(p){ return p.id; }).slice(0,1);
+      if (res[it.payer]) res[it.payer].paid += it.amount;
+      var shares = shareOut(it.amount, sharers);
+      Object.keys(shares).forEach(function(id){ if (res[id]) res[id].owed += shares[id]; });
+    });
+
+    Object.keys(res).forEach(function(id){
+      res[id].net = res[id].paid - res[id].owed;
+    });
+    return res;
+  }
+
+  /** 채무자→채권자 최소 송금 목록 (그리디 상계) */
+  function settle(res){
+    var creditors = [], debtors = [];
+    Object.keys(res).forEach(function(id){
+      var b = res[id];
+      if (b.net > 0) creditors.push({ id:id, name:b.name, amt:b.net });
+      else if (b.net < 0) debtors.push({ id:id, name:b.name, amt:-b.net });
+    });
+    creditors.sort(function(a,b){ return b.amt - a.amt; });
+    debtors.sort(function(a,b){ return b.amt - a.amt; });
+
+    var out = [], i = 0, j = 0, guard = 0;
+    while (i < debtors.length && j < creditors.length && guard++ < 500){
+      var pay = Math.min(debtors[i].amt, creditors[j].amt);
+      if (pay > 0) out.push({ from:debtors[i].name, to:creditors[j].name, amt:pay });
+      debtors[i].amt -= pay;
+      creditors[j].amt -= pay;
+      if (debtors[i].amt <= 0) i++;
+      if (creditors[j].amt <= 0) j++;
+    }
+    return out;
+  }
+
+  /* ---------------- 결과 렌더 ---------------- */
+  function renderResult(){
+    var res = compute();
+    var ids = Object.keys(res);
+    var total = state.items.reduce(function(s,it){ return s + it.amount; }, 0);
+    var n = state.people.length;
+
+    el.sumTotal.textContent = won(total);
+    el.sumPeople.textContent = n + '명';
+    el.sumAvg.textContent = n ? won(Math.round(total / n)) : '0원';
+
+    el.balances.innerHTML = ids.map(function(id){
+      var b = res[id];
+      var cls = b.net > 0 ? 'plus' : (b.net < 0 ? 'minus' : 'zero');
+      var sign = b.net > 0 ? '+' : '';
+      return '<li class="bal">' +
+        '<span class="who" style="box-shadow:inset 3px 0 0 ' + colorOf(id) + ';padding-left:8px">' + esc(b.name) + '</span>' +
+        '<span class="paid">' + won(b.paid) + ' 냄</span>' +
+        '<span class="net ' + cls + '">' + sign + won(b.net) + '</span>' +
+      '</li>';
+    }).join('');
+
+    var tr = settle(res);
+    el.transfers.innerHTML = tr.map(function(t){
+      return '<li class="tr"><span class="from">' + esc(t.from) + '</span>' +
+        '<span class="arrow" aria-hidden="true">→</span>' +
+        '<span class="to">' + esc(t.to) + '</span>' +
+        '<span class="val">' + won(t.amt) + '</span></li>';
+    }).join('');
+    el.allDone.hidden = !(ids.length && !tr.length && total > 0);
+    if (!ids.length || !total){ el.allDone.hidden = true; }
+
+    el.copiedMsg.textContent = '';
+    // 영수증 번호(장식): 총액 기반
+    el.stamp.textContent = 'NO. ' + (total ? ('000' + (total % 100000)).slice(-5) : '----');
+  }
+
+  /* ---------------- 복사 ---------------- */
+  function summaryText(){
+    var res = compute(), ids = Object.keys(res), total = 0;
+    state.items.forEach(function(it){ total += it.amount; });
+    var lines = ['🧾 모임 정산 결과', '총 ' + won(total) + ' · ' + state.people.length + '명', ''];
+    state.items.forEach(function(it){
+      lines.push('· ' + it.name + ' ' + won(it.amount) + ' (' + nameOf(it.payer) + ' 결제)');
+    });
+    lines.push('', '[이렇게 보내면 끝]');
+    var tr = settle(res);
+    if (!tr.length) lines.push('보낼 돈 없음 — 이미 딱 맞아요!');
+    tr.forEach(function(t){ lines.push(t.from + ' → ' + t.to + ' ' + won(t.amt)); });
+    return lines.join('\n');
+  }
+
+  function copyText(text){
+    function done(){ el.copiedMsg.textContent = '복사했어요. 단톡방에 붙여 넣으세요!'; toast('복사했어요'); }
+    function fail(){
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.setAttribute('readonly','');
+        ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+        document.body.appendChild(ta); ta.select();
+        var ok = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (ok) done(); else el.copiedMsg.textContent = '복사에 실패했어요. 화면의 금액을 확인해 주세요.';
+      } catch(e){ el.copiedMsg.textContent = '복사에 실패했어요.'; }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(done, fail);
+    } else fail();
+  }
+
+  /* ---------------- 예시 ---------------- */
+  function loadExample(){
+    state.people = [{id:'p_a',name:'민수'},{id:'p_b',name:'서연'},{id:'p_c',name:'지훈'},{id:'p_d',name:'하늘'}];
+    state.picks = state.people.map(function(p){ return p.id; });
+    state.items = [
+      {id:'i_1',name:'삼겹살 · 소주',amount:96000,payer:'p_a',share:['p_a','p_b','p_c','p_d']},
+      {id:'i_2',name:'노래방',amount:44000,payer:'p_b',share:['p_a','p_b','p_c','p_d']},
+      {id:'i_3',name:'택시',amount:18000,payer:'p_c',share:['p_c','p_d']}
+    ];
+    save(); render();
+    toast('예시 데이터를 채웠어요');
+  }
+
+  function resetAll(){
+    state.people = []; state.items = []; state.picks = [];
+    el.itemName.value = ''; el.itemAmount.value = '';
+    save(); render();
+    toast('전체 지웠어요');
+  }
+
+  /* ---------------- 렌더 ---------------- */
+  function render(){
+    renderPeople();
+    renderPickers();
+    renderItems();
+    renderResult();
+  }
+
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+
+  /* ---------------- 이벤트 ---------------- */
+  el.personForm.addEventListener('submit', function(e){
+    e.preventDefault();
+    if (addPerson(el.personName.value)) el.personName.value = '';
+    el.personName.focus();
+  });
+
+  el.people.addEventListener('click', function(e){
+    var b = e.target.closest('[data-del-person]');
+    if (b) removePerson(b.getAttribute('data-del-person'));
+  });
+
+  el.picks.addEventListener('click', function(e){
+    var b = e.target.closest('[data-pick]');
+    if (!b) return;
+    var id = b.getAttribute('data-pick');
+    var i = state.picks.indexOf(id);
+    if (i === -1) state.picks.push(id); else state.picks.splice(i,1);
+    b.setAttribute('aria-pressed', i === -1 ? 'true' : 'false');
+    updatePerHead();
+  });
+
+  el.itemAmount.addEventListener('input', updatePerHead);
+  el.itemName.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ e.preventDefault(); el.itemAmount.focus(); }
+  });
+  el.itemAmount.addEventListener('keydown', function(e){
+    if (e.key === 'Enter'){ e.preventDefault(); addItem(); }
+  });
+  el.addItem.addEventListener('click', addItem);
+
+  el.items.addEventListener('click', function(e){
+    var b = e.target.closest('[data-del-item]');
+    if (b) removeItem(b.getAttribute('data-del-item'));
+  });
+
+  el.copyBtn.addEventListener('click', function(){ copyText(summaryText()); });
+  el.exampleBtn.addEventListener('click', loadExample);
+  el.resetBtn.addEventListener('click', function(){
+    if (state.people.length || state.items.length) resetAll();
+  });
+
+  el.payer.addEventListener('change', function(){
+    // 결제자를 바꾸면 그 사람이 분담에 포함되도록 (직관 보정)
+    var id = el.payer.value;
+    if (id && state.picks.indexOf(id) === -1 && state.people.length){
+      state.picks.push(id);
+      renderPickers();
+    }
+  });
+
+  load();
+  render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1116">
+<title>2026-11-24 웹앱 3종 — N빵 정산기 · 초성 퀴즈 · 집중 타이머</title>
+<meta name="description" content="모임 회비 N빵 정산기, 초성 퀴즈, 25분 집중 타이머 — 설치 없이 브라우저에서 바로 쓰는 웹앱 3종.">
+<style>
+  :root{--bg:#0d1117;--card:#151b23;--line:rgba(255,255,255,.09);--txt:#e6edf3;--dim:#8b98a5;
+    --a:#5ee9a6;--v:#a99bff;--y:#ffb86b}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1000px 500px at 8% -10%,rgba(94,233,166,.13),transparent 60%),
+      radial-gradient(900px 480px at 100% 0%,rgba(169,155,255,.15),transparent 58%),
+      radial-gradient(800px 460px at 50% 110%,rgba(255,184,107,.09),transparent 60%),
+      linear-gradient(180deg,#0d1117,#0a0e13);
+    -webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:1000px;margin:0 auto;padding:34px 18px 66px}
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+  .back{text-decoration:none;color:var(--dim);font-size:12.5px;font-weight:700;
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
+  .back:hover{color:var(--txt);border-color:rgba(255,255,255,.24)}
+  .pf{text-decoration:none;font-size:12.5px;font-weight:800;color:#d7fbe8;
+    background:linear-gradient(120deg,rgba(94,233,166,.16),rgba(139,123,255,.18));
+    border:1px solid rgba(94,233,166,.34);border-radius:999px;padding:6px 13px}
+  h1{font-size:clamp(24px,5vw,34px);letter-spacing:-.9px;margin:0 0 6px}
+  .sub{color:var(--dim);font-size:14px;margin:0 0 26px}
+  .cards{display:grid;gap:14px}
+  @media(min-width:760px){.cards{grid-template-columns:repeat(3,1fr)}}
+  a.card{display:block;text-decoration:none;color:inherit;background:linear-gradient(180deg,#161d25,#131a21);
+    border:1px solid var(--line);border-radius:18px;padding:19px;
+    transition:transform .15s,border-color .15s,box-shadow .2s}
+  a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22);box-shadow:0 20px 40px -26px #000}
+  .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+  .card h2{margin:0 0 4px;font-size:17px;letter-spacing:-.3px}
+  .tagline{color:var(--dim);font-size:13px;margin:0 0 12px;min-height:2.6em}
+  .feat{list-style:none;padding:0;margin:0 0 14px;font-size:12.5px;color:#b6c2ce;display:grid;gap:5px}
+  .feat li:before{content:"✓";color:var(--a);margin-right:6px;font-weight:700}
+  .card.v .feat li:before{color:var(--v)}
+  .card.y .feat li:before{color:var(--y)}
+  .go{font-size:13px;font-weight:800;color:var(--a)}
+  .card.v .go{color:#b3a8ff}
+  .card.y .go{color:var(--y)}
+  .note{margin-top:24px;font-size:12.5px;color:#6f7d8b;text-align:center;line-height:1.8}
+  .note code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="../../">← 전체 아카이브</a>
+    <a class="pf" href="../../portfolio/">✨ 포트폴리오</a>
+  </div>
+  <h1>오늘 만든 웹앱 3종</h1>
+  <p class="sub">2026-11-24 · 설치·로그인 없이 브라우저에서 바로 동작합니다. 모든 기록은 내 기기에만 저장됩니다.</p>
+  <div class="cards">
+    <a class="card" href="./split-bill/index.html">
+      <div class="ico" style="background:rgba(94,233,166,.14)">🧾</div>
+      <h2>N빵 정산기</h2>
+      <p class="tagline">항목마다 참여자가 달라도, 송금은 가장 적은 횟수로</p>
+      <ul class="feat">
+        <li>지출마다 결제자·나눌 사람 따로 지정</li>
+        <li>원 단위까지 안 틀어지게 자동 분배</li>
+        <li>차액 상계로 최소 송금 목록 · 복사</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="card v" href="./chosung-quiz/index.html">
+      <div class="ico" style="background:rgba(169,155,255,.16)">ㄱ</div>
+      <h2>초성 퀴즈</h2>
+      <p class="tagline">속담·사자성어·생활 단어를 초성만 보고 맞히기</p>
+      <ul class="feat">
+        <li>10문제 · 문제당 15초 · 보기 4개</li>
+        <li>콤보·속도 보너스, 힌트 2회</li>
+        <li>최고 점수 저장 · 틀린 문제 복습</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="card y" href="./focus-pomodoro/index.html">
+      <div class="ico" style="background:rgba(255,184,107,.14)">⏳</div>
+      <h2>집중 타이머</h2>
+      <p class="tagline">25분 집중 · 5분 휴식, 백색소음과 함께</p>
+      <ul class="feat">
+        <li>뽀모도로 사이클 · 자동 시작 · 알림음</li>
+        <li>브라우저가 만드는 갈색소음·빗소리·파도</li>
+        <li>오늘·최근 7일 집중 시간 기록</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+  </div>
+  <p class="note">
+    순수 HTML/CSS/JS 단일 파일 · 외부 라이브러리·웹폰트 0개 · <code>localStorage</code>로만 저장<br>
+    앱 폴더: <code>split-bill/</code> · <code>chosung-quiz/</code> · <code>focus-pomodoro/</code>
+  </p>
+</div>
+</body>
+</html>

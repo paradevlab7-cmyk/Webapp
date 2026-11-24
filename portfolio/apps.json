@@ -4,14 +4,75 @@
     "maker": "paradevlab7",
     "tagline": "설치도 로그인도 없이 브라우저에서 바로 쓰는 웹앱을 하루 3개씩 만듭니다.",
     "repo": "https://github.com/paradevlab7-cmyk/Webapp",
-    "updated": "2026-11-23"
+    "updated": "2026-11-24"
   },
   "categories": [
     { "id": "util", "label": "실용·계산", "icon": "🧮" },
     { "id": "game", "label": "게임·두뇌", "icon": "🎮" },
-    { "id": "finance", "label": "금융·생산성", "icon": "💸" }
+    { "id": "finance", "label": "금융·생산성", "icon": "💸" },
+    { "id": "life", "label": "일상·도구", "icon": "🧰" }
   ],
   "apps": [
+    {
+      "slug": "split-bill",
+      "name": "N빵 정산기",
+      "date": "2026-11-24",
+      "category": "util",
+      "icon": "🧾",
+      "accent": "#5ee9a6",
+      "summary": "항목마다 참여자가 달라도, 송금은 가장 적은 횟수로",
+      "description": "모임 회비를 정산하는 계산기입니다. 지출마다 결제한 사람과 나눌 사람을 따로 지정할 수 있어 술을 안 마신 사람, 택시를 함께 탄 사람까지 정확히 반영됩니다. 서로 주고받을 돈을 상계해 실제로 보낼 송금만 남겨 줍니다.",
+      "features": [
+        "지출마다 결제자와 참여자를 따로 지정해 1/N 분담",
+        "1원 단위로 정확히 나누고 나머지는 순서대로 배분",
+        "차액을 상계해 가장 적은 송금 횟수로 정리",
+        "정산 결과를 단톡방에 붙일 수 있게 복사",
+        "참여자·항목을 브라우저에 자동 저장"
+      ],
+      "tags": ["더치페이", "정산", "모임", "회비", "계산기"],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-24/split-bill/",
+      "path": "apps/2026-11-24/split-bill/"
+    },
+    {
+      "slug": "chosung-quiz",
+      "name": "초성 퀴즈",
+      "date": "2026-11-24",
+      "category": "game",
+      "icon": "ㄱ",
+      "accent": "#a99bff",
+      "summary": "속담·사자성어를 초성만 보고 맞히기",
+      "description": "속담·사자성어·생활 단어를 초성만 보고 맞히는 10문제 퀴즈입니다. 문제당 15초 안에 보기 4개 중 정답을 고르고, 연속으로 맞히면 콤보 보너스가 붙습니다. 틀린 문제는 결과 화면에서 뜻과 함께 다시 볼 수 있습니다.",
+      "features": [
+        "속담·사자성어·생활 단어 72개 데이터 내장",
+        "10문제 · 문제당 15초 · 4지선다",
+        "속도 보너스와 콤보 배수로 점수 산정",
+        "힌트 2회(뜻 공개, −30점)",
+        "최고 점수 저장과 틀린 문제 복습"
+      ],
+      "tags": ["초성", "퀴즈", "속담", "사자성어", "게임", "두뇌"],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-24/chosung-quiz/",
+      "path": "apps/2026-11-24/chosung-quiz/"
+    },
+    {
+      "slug": "focus-pomodoro",
+      "name": "집중 타이머",
+      "date": "2026-11-24",
+      "category": "life",
+      "icon": "⏳",
+      "accent": "#ffb86b",
+      "summary": "25분 집중 · 5분 휴식, 백색소음과 함께",
+      "description": "뽀모도로 방식 집중 타이머입니다. 25분 집중과 5분 휴식을 자동으로 이어 갈 수 있고, 갈색 소음·빗소리·파도를 브라우저가 직접 만들어 재생합니다. 완료한 집중 시간은 오늘과 최근 7일 그래프로 쌓입니다.",
+      "features": [
+        "집중·짧은 휴식·긴 휴식 3가지 모드와 시간 설정",
+        "집중 4회 후 긴 휴식으로 자동 전환",
+        "외부 파일 없이 만드는 백색소음(갈색·빗소리·파도)",
+        "오늘 집중 시간·세션·연속 일수 기록",
+        "최근 7일 막대 그래프와 세션 기록"
+      ],
+      "tags": ["뽀모도로", "타이머", "집중", "생산성", "백색소음"],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-24/focus-pomodoro/",
+      "path": "apps/2026-11-24/focus-pomodoro/"
+    },
     {
       "slug": "calorie-coach",
       "name": "칼로리 코치",

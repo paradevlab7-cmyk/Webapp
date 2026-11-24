@@ -330,6 +330,23 @@ html[data-theme="light"] .icon-btn .ico-moon{opacity:0;transform:rotate(60deg) s
   color:var(--txt);
 }
 .fav-filter[aria-pressed="true"] span[aria-hidden]{color:#ffc857}
+
+/* 날짜별 보기 토글 */
+.view-toggle{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:11px 13px;border-radius:12px;
+  border:1px solid var(--line);background:var(--surface);
+  font-size:13.5px;font-weight:700;cursor:pointer;white-space:nowrap;
+  transition:border-color .16s,background .16s,color .16s,transform .16s var(--ease);
+}
+.view-toggle span[aria-hidden]{font-size:12px;color:var(--dim-2);transition:color .16s}
+.view-toggle:hover{border-color:var(--line-strong);background:var(--surface-2);transform:translateY(-1px)}
+.view-toggle[aria-pressed="true"]{
+  border-color:color-mix(in srgb, var(--accent) 55%, var(--line));
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+  color:var(--txt);
+}
+.view-toggle[aria-pressed="true"] span[aria-hidden]{color:var(--accent)}
 .fav-count{
   display:inline-grid;place-items:center;min-width:19px;height:19px;padding:0 5px;
   border-radius:999px;background:var(--surface-2);border:1px solid var(--line);
@@ -374,6 +391,34 @@ html[data-theme="light"] .icon-btn .ico-moon{opacity:0;transform:rotate(60deg) s
   display:grid;
   grid-template-columns:1fr;
   gap:14px;
+}
+
+/* 날짜별 그룹 보기 */
+.grid.grouped{display:block}
+.daygroup{margin:0 0 30px}
+.daygroup:last-child{margin-bottom:0}
+.daygroup-head{
+  display:flex;align-items:center;gap:9px;flex-wrap:wrap;
+  margin:0 0 12px;padding:0 2px 9px;
+  border-bottom:1px solid var(--line);
+}
+.dg-date{font-size:14.5px;font-weight:800;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
+.dg-rel{font-size:11.5px;color:var(--dim-2)}
+.dg-n{
+  margin-left:auto;font-size:11px;font-weight:800;color:var(--accent);
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+  border:1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+  border-radius:999px;padding:2px 9px;
+}
+.daygroup-cards{display:grid;grid-template-columns:1fr;gap:14px}
+
+/* 새로 추가된 앱 배지 */
+.new-badge{
+  display:inline-flex;align-items:center;
+  margin-left:1px;padding:1px 6px;border-radius:6px;
+  font-size:9.5px;font-weight:900;letter-spacing:.08em;line-height:1.5;
+  color:var(--accent-ink);background:var(--accent);
+  box-shadow:0 8px 18px -12px var(--accent);
 }
 
 .card{
@@ -623,6 +668,7 @@ mark{
 @media (min-width:560px){
   .page{padding:0 26px 64px}
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+  .daygroup-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
   .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
   .modal{place-items:center}
   .modal-card{
@@ -638,6 +684,7 @@ mark{
 @media (min-width:980px){
   .page{padding:0 32px 76px}
   .grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+  .daygroup-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
   .hero{padding:66px 0 40px}
   .stats{margin-bottom:38px}
 }
@@ -647,6 +694,7 @@ mark{
   .hero{padding-top:40px}
   .toolbar-right{width:100%}
   .fav-filter{flex:1 1 auto;justify-content:center}
+  .view-toggle{flex:0 0 auto;justify-content:center}
   .select-wrap{flex:1 1 auto}
   #sortSelect{width:100%}
   .stat{padding:14px 13px}

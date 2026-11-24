@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#12102a">
+<title>초성 퀴즈 — 100점을 향해, 초성만 보고 맞히기</title>
+<meta name="description" content="속담·사자성어·생활 단어를 초성만 보고 맞히는 10문제 퀴즈. 콤보와 남은 시간에 따라 점수가 쌓이고, 최고 점수는 브라우저에 저장됩니다.">
+<style>
+  :root{
+    --bg:#0e0c22; --bg2:#141133; --ink:#f0eeff; --ink2:#c6c2ea; --dim:#8b86b8;
+    --line:rgba(210,200,255,.13); --line2:rgba(210,200,255,.24);
+    --card:#191540; --card2:#1f1a4d;
+    --y:#ffe066; --y-ink:#241f00; --v:#a99bff; --g:#5ee9a6; --r:#ff7b93; --c:#6fe3ff;
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  button{font:inherit;color:inherit}
+  body{
+    min-height:100vh;color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    line-height:1.5;-webkit-font-smoothing:antialiased;
+    background:
+      radial-gradient(760px 420px at 12% -10%,rgba(169,155,255,.24),transparent 62%),
+      radial-gradient(680px 380px at 96% 2%,rgba(111,227,255,.14),transparent 60%),
+      radial-gradient(700px 500px at 50% 118%,rgba(255,224,102,.10),transparent 62%),
+      linear-gradient(180deg,#0e0c22,#100d2a 55%,#0b0919);
+  }
+  .wrap{max-width:880px;margin:0 auto;padding:22px 16px 80px}
+  @media(min-width:720px){.wrap{padding:36px 24px 90px}}
+
+  .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .brand{display:inline-flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;color:var(--y);
+    text-decoration:none;letter-spacing:.01em}
+  .brand .mark{display:grid;place-items:center;width:26px;height:26px;border-radius:9px;font-size:13px;
+    background:linear-gradient(150deg,rgba(255,224,102,.26),rgba(169,155,255,.24));
+    border:1px solid rgba(255,224,102,.38)}
+  .brand .back{margin-left:6px;padding-left:10px;border-left:1px solid var(--line2);color:var(--dim);font-weight:600}
+  .best-pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:800;color:var(--y);
+    background:rgba(255,224,102,.09);border:1px solid rgba(255,224,102,.28);border-radius:999px;padding:5px 12px}
+  .best-pill span{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  /* ---------- 공통 카드 ---------- */
+  .panel{background:linear-gradient(180deg,rgba(25,21,64,.96),rgba(20,17,51,.86));
+    border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:0 30px 60px -50px #000}
+  @media(min-width:720px){.panel{padding:26px}}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:13px;
+    padding:13px 18px;font-size:14.5px;font-weight:800;letter-spacing:-.01em;cursor:pointer;
+    border:1px solid var(--line2);background:var(--card2);color:var(--ink);
+    transition:transform .14s,background .15s,border-color .15s,box-shadow .2s;white-space:nowrap}
+  .btn:hover{transform:translateY(-1px);border-color:rgba(255,255,255,.3);background:#251f5c}
+  .btn:active{transform:translateY(0)}
+  .btn:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,224,102,.35)}
+  .btn-primary{background:linear-gradient(150deg,var(--y),#f5c93c);color:var(--y-ink);border-color:transparent;
+    box-shadow:0 16px 34px -22px var(--y)}
+  .btn-primary:hover{background:linear-gradient(150deg,#ffe98c,#ffd75c)}
+  .btn-ghost{background:transparent}
+  .btn-sm{padding:9px 13px;font-size:12.5px;border-radius:10px}
+  .btn[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+
+  /* ---------- 시작 화면 ---------- */
+  .hero{text-align:center;padding:8px 0 4px}
+  .kicker{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:.12em;
+    color:var(--v);border:1px solid rgba(169,155,255,.34);background:rgba(169,155,255,.1);
+    border-radius:999px;padding:5px 12px;margin-bottom:16px}
+  h1{margin:0 0 10px;font-size:clamp(28px,7vw,44px);line-height:1.12;letter-spacing:-.045em}
+  h1 em{font-style:normal;color:var(--y);text-shadow:0 0 34px rgba(255,224,102,.35)}
+  .lede{margin:0 auto 22px;max-width:44ch;color:var(--dim);font-size:13.5px}
+
+  .sample{display:inline-flex;gap:10px;align-items:center;justify-content:center;margin:0 auto 24px;
+    padding:14px 22px;border-radius:16px;border:1px dashed rgba(255,224,102,.34);
+    background:rgba(255,224,102,.05)}
+  .sample .cs{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:clamp(21px,6vw,30px);
+    font-weight:800;letter-spacing:.16em;color:var(--ink)}
+  .sample .arrow{color:var(--dim);font-size:12px}
+  .sample .ans{font-size:13px;font-weight:800;color:var(--y)}
+
+  .cats{display:grid;gap:9px;grid-template-columns:1fr 1fr;margin-bottom:16px}
+  @media(min-width:560px){.cats{grid-template-columns:repeat(4,1fr)}}
+  .cat{display:flex;flex-direction:column;align-items:flex-start;gap:2px;text-align:left;
+    padding:12px 13px;border-radius:13px;border:1px solid var(--line);background:rgba(255,255,255,.026);
+    cursor:pointer;transition:all .15s}
+  .cat:hover{border-color:var(--line2);background:rgba(255,255,255,.05);transform:translateY(-1px)}
+  .cat .ic{font-size:17px;line-height:1.2}
+  .cat .lb{font-size:13.5px;font-weight:800}
+  .cat .dc{font-size:11px;color:var(--dim)}
+  .cat[aria-pressed="true"]{border-color:rgba(255,224,102,.6);background:rgba(255,224,102,.12);
+    box-shadow:0 0 0 1px rgba(255,224,102,.2) inset}
+  .cat[aria-pressed="true"] .dc{color:#e8dfa4}
+
+  .start-row{display:grid;gap:10px;margin-top:6px}
+  .meta-row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-top:16px;
+    color:var(--dim);font-size:11.5px}
+  .meta-row b{color:var(--ink2)}
+
+  /* ---------- 게임 ---------- */
+  .hud{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+  .hud-l{display:flex;align-items:center;gap:10px;min-width:0}
+  .qidx{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;font-weight:800;color:var(--dim);
+    white-space:nowrap}
+  .combo{padding:3px 10px;border-radius:999px;font-size:11.5px;font-weight:900;letter-spacing:.02em;
+    color:var(--y-ink);background:var(--y);opacity:0;transform:scale(.85);transition:.18s}
+  .combo.on{opacity:1;transform:scale(1)}
+  .hud-r{display:flex;align-items:center;gap:12px}
+  .score-box{text-align:right;line-height:1.1}
+  .score-box .k{display:block;font-size:10px;letter-spacing:.1em;color:var(--dim);font-weight:800}
+  .score-box .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:19px;font-weight:800;
+    font-variant-numeric:tabular-nums;color:var(--y)}
+  .timer{position:relative;width:46px;height:46px;flex:0 0 auto}
+  .timer svg{transform:rotate(-90deg);display:block}
+  .timer .num{position:absolute;inset:0;display:grid;place-items:center;
+    font-family:ui-monospace,Menlo,Consolas,monospace;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+  .timer.low .num{color:var(--r)}
+  .bar{height:5px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:22px}
+  .bar > i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,var(--v),var(--c));
+    transition:width .35s}
+
+  .qcard{text-align:center;padding:20px 12px 16px;border-radius:18px;margin-bottom:18px;
+    border:1px solid var(--line);background:
+      radial-gradient(420px 200px at 50% -30%,rgba(169,155,255,.22),transparent 70%),
+      rgba(255,255,255,.02)}
+  .qtag{display:inline-block;font-size:11px;font-weight:800;letter-spacing:.08em;color:var(--v);
+    background:rgba(169,155,255,.12);border:1px solid rgba(169,155,255,.3);border-radius:999px;
+    padding:3px 10px;margin-bottom:12px}
+  .chosung{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+    font-size:clamp(30px,9.5vw,52px);font-weight:800;letter-spacing:.14em;line-height:1.3;
+    margin:0 0 6px;word-break:keep-all;overflow-wrap:anywhere}
+  .hintbox{min-height:22px;color:var(--dim);font-size:12.5px;margin:0}
+  .hintbox.show{color:#ded9ff}
+  .qlen{font-size:11.5px;color:#6f69a0;margin:8px 0 0}
+
+  .choices{display:grid;gap:9px;grid-template-columns:1fr}
+  @media(min-width:560px){.choices{grid-template-columns:1fr 1fr}}
+  .choice{position:relative;display:flex;align-items:center;gap:11px;text-align:left;
+    padding:14px 15px;border-radius:14px;border:1px solid var(--line2);background:rgba(255,255,255,.04);
+    cursor:pointer;transition:transform .13s,background .15s,border-color .15s,box-shadow .2s;
+    font-size:14.5px;font-weight:700;line-height:1.35;min-height:54px;width:100%}
+  .choice:hover:not([disabled]){transform:translateY(-2px);background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.3)}
+  .choice:focus-visible{outline:none;box-shadow:0 0 0 3px rgba(255,224,102,.4)}
+  .choice .key{flex:0 0 auto;display:grid;place-items:center;width:24px;height:24px;border-radius:8px;
+    background:rgba(255,255,255,.08);font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
+    color:var(--dim);font-weight:800}
+  .choice .txt{flex:1 1 auto;min-width:0;overflow-wrap:anywhere}
+  .choice[disabled]{cursor:default}
+  .choice.correct{background:rgba(94,233,166,.16);border-color:rgba(94,233,166,.6);color:#d8ffee}
+  .choice.correct .key{background:rgba(94,233,166,.3);color:#eafff6}
+  .choice.wrong{background:rgba(255,123,147,.13);border-color:rgba(255,123,147,.5);color:#ffdbe3}
+  .choice.wrong .key{background:rgba(255,123,147,.28);color:#ffe7ec}
+  .choice.dim{opacity:.45}
+
+  .feedback{margin-top:14px;min-height:24px;text-align:center;font-size:13.5px;font-weight:800}
+  .feedback.good{color:var(--g)}
+  .feedback.bad{color:var(--r)}
+  .feedback .pts{font-family:ui-monospace,Menlo,Consolas,monospace}
+
+  .game-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .game-foot .hintbtn{display:inline-flex;align-items:center;gap:7px}
+  .game-foot .hintbtn small{color:var(--dim);font-size:11px;font-weight:700}
+
+  /* ---------- 결과 ---------- */
+  .result{text-align:center}
+  .grade{font-size:clamp(30px,8vw,46px);font-weight:900;letter-spacing:-.04em;margin:6px 0 2px;color:var(--y)}
+  .grade-sub{color:var(--dim);font-size:13px;margin:0 0 18px}
+  .ring{width:170px;height:170px;margin:0 auto 16px;position:relative}
+  .ring svg{display:block;transform:rotate(-90deg)}
+  .ring .in{position:absolute;inset:0;display:grid;place-content:center;text-align:center}
+  .ring .big{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:900;
+    font-variant-numeric:tabular-nums;line-height:1;color:var(--ink)}
+  .ring .sub{font-size:10.5px;letter-spacing:.14em;color:var(--dim);font-weight:800;margin-top:5px}
+  .rst-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin:0 0 18px}
+  .rst{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:11px 8px}
+  .rst .k{display:block;font-size:10.5px;color:var(--dim);letter-spacing:.06em;font-weight:800}
+  .rst .v{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:16px;font-weight:800;
+    font-variant-numeric:tabular-nums;margin-top:3px}
+  .newbest{display:inline-block;margin-bottom:12px;font-size:11.5px;font-weight:900;color:var(--y-ink);
+    background:var(--y);border-radius:999px;padding:4px 12px;letter-spacing:.02em}
+  .wrongs{text-align:left;margin:0 0 18px}
+  .wrongs h3{font-size:12px;letter-spacing:.08em;color:var(--dim);margin:0 0 8px;font-weight:800}
+  .wrongs ul{list-style:none;margin:0;padding:0;display:grid;gap:7px}
+  .wrongs li{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:11px;
+    padding:10px 12px;font-size:12.5px}
+  .wrongs li b{color:var(--ink)}
+  .wrongs li span{display:block;color:var(--dim);font-size:11.5px;margin-top:2px}
+  .result-actions{display:grid;gap:9px}
+  @media(min-width:560px){.result-actions{grid-template-columns:1.4fr 1fr}}
+
+  .foot{margin-top:20px;text-align:center;color:#5d588c;font-size:11.5px;line-height:1.7}
+  .foot a{color:#8e88bd}
+  .hidden{display:none!important}
+  .sr{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);z-index:60;
+    background:#241f5c;color:#fff;border:1px solid var(--line2);font-size:12.5px;font-weight:800;
+    padding:9px 15px;border-radius:999px;box-shadow:0 18px 40px -18px #000;opacity:0;pointer-events:none;
+    transition:opacity .2s,transform .2s}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="top">
+    <a class="brand" href="../../../"><span class="mark" aria-hidden="true">ㄱ</span>매일 만드는 웹앱<span class="back">아카이브</span></a>
+    <span class="best-pill">🏆 최고 <span id="bestTop">0</span>점</span>
+  </div>
+
+  <!-- ================= 시작 ================= -->
+  <section id="screen-start">
+    <div class="panel">
+      <div class="hero">
+        <span class="kicker">초성 퀴즈 · 10문제</span>
+        <h1>초성만 보고<br><em>맞혀 보세요</em></h1>
+        <p class="lede">속담부터 사자성어, 생활 단어까지. 10문제를 15초 안에 풀고, 연속으로 맞히면 콤보 보너스가 붙습니다.</p>
+
+        <div class="sample" aria-hidden="true">
+          <span class="cs">ㅇㅅㅇㅈ</span>
+          <span class="arrow">→</span>
+          <span class="ans">일석이조</span>
+        </div>
+
+        <div class="cats" id="cats" role="group" aria-label="문제 종류 선택"></div>
+
+        <div class="start-row">
+          <button class="btn btn-primary" type="button" id="startBtn">시작하기  <span aria-hidden="true">→</span></button>
+        </div>
+
+        <div class="meta-row">
+          <span>문제당 <b>15초</b></span>
+          <span>힌트 <b>2회</b></span>
+          <span>콤보 <b>×20점</b></span>
+          <span>플레이 <b id="playsTop">0</b>회</span>
+        </div>
+      </div>
+    </div>
+    <p class="foot">최고 점수와 플레이 횟수는 이 브라우저에만 저장됩니다. · 단어 데이터는 앱 안에 포함되어 있습니다.</p>
+  </section>
+
+  <!-- ================= 게임 ================= -->
+  <section id="screen-game" class="hidden">
+    <div class="panel">
+      <div class="hud">
+        <div class="hud-l">
+          <span class="qidx" id="qidx">01 / 10</span>
+          <span class="combo" id="comboPill">COMBO ×2</span>
+        </div>
+        <div class="hud-r">
+          <div class="score-box"><span class="k">SCORE</span><span class="v" id="score">0</span></div>
+          <div class="timer" id="timer">
+            <svg width="46" height="46" viewBox="0 0 46 46" aria-hidden="true">
+              <circle cx="23" cy="23" r="19" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="4"></circle>
+              <circle id="timerArc" cx="23" cy="23" r="19" fill="none" stroke="#ffe066" stroke-width="4"
+                      stroke-linecap="round" stroke-dasharray="119.4" stroke-dashoffset="0"></circle>
+            </svg>
+            <span class="num" id="timerNum">15</span>
+          </div>
+        </div>
+      </div>
+      <div class="bar" aria-hidden="true"><i id="progress" style="width:10%"></i></div>
+
+      <div class="qcard">
+        <span class="qtag" id="qtag">속담</span>
+        <p class="chosung" id="chosung">ㄱㄱㅅㄷ ㅅㅎㄱ</p>
+        <p class="hintbox" id="hintBox">힌트를 쓰면 이 자리에 뜻이 나옵니다.</p>
+        <p class="qlen" id="qlen"></p>
+      </div>
+
+      <div class="choices" id="choices" role="group" aria-label="보기"></div>
+
+      <p class="feedback" id="feedback" role="status" aria-live="polite"></p>
+
+      <div class="game-foot">
+        <button class="btn btn-ghost btn-sm hintbtn" type="button" id="hintBtn">
+          💡 힌트 <small>2회 · −30점</small>
+        </button>
+        <button class="btn btn-ghost btn-sm" type="button" id="quitBtn">그만하기</button>
+      </div>
+    </div>
+    <p class="foot">보기는 키보드 <b>1~4</b>, 힌트는 <b>H</b> 키로도 쓸 수 있어요.</p>
+  </section>
+
+  <!-- ================= 결과 ================= -->
+  <section id="screen-result" class="hidden">
+    <div class="panel result">
+      <span class="kicker" id="resultKicker">결과</span>
+      <p class="grade" id="grade">초성 마스터</p>
+      <p class="grade-sub" id="gradeSub">10문제 중 8문제 정답</p>
+
+      <div class="newbest" id="newBest" hidden>🎉 오늘의 최고 점수!</div>
+
+      <div class="ring">
+        <svg width="170" height="170" viewBox="0 0 170 170" aria-hidden="true">
+          <circle cx="85" cy="85" r="71" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="11"></circle>
+          <circle id="scoreArc" cx="85" cy="85" r="71" fill="none" stroke="url(#gr)" stroke-width="11"
+                  stroke-linecap="round" stroke-dasharray="446" stroke-dashoffset="446"></circle>
+          <defs>
+            <linearGradient id="gr" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#ffe066"/><stop offset="1" stop-color="#a99bff"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <div class="in"><div class="big" id="finalScore">0</div><div class="sub">POINTS</div></div>
+      </div>
+
+      <div class="rst-grid">
+        <div class="rst"><span class="k">정답</span><div class="v" id="rCorrect">0/10</div></div>
+        <div class="rst"><span class="k">최고 콤보</span><div class="v" id="rCombo">0</div></div>
+        <div class="rst"><span class="k">최고 점수</span><div class="v" id="rBest">0</div></div>
+      </div>
+
+      <div class="wrongs" id="wrongs" hidden>
+        <h3>틀린 문제 다시 보기</h3>
+        <ul id="wrongList"></ul>
+      </div>
+
+      <div class="result-actions">
+        <button class="btn btn-primary" type="button" id="againBtn">한 번 더  <span aria-hidden="true">↻</span></button>
+        <button class="btn btn-ghost" type="button" id="menuBtn">종류 바꾸기</button>
+      </div>
+    </div>
+    <p class="foot">틀린 문제는 결과 화면에서 바로 복습할 수 있어요.</p>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var BEST_KEY = 'chosung:best:v1';
+  var PLAY_KEY = 'chosung:plays:v1';
+  var CAT_KEY  = 'chosung:cat:v1';
+  var LIMIT = 15;      // 문제당 제한 시간(초)
+  var ROUNDS = 10;     // 문제 수
+  var HINTS = 2;
+  var HINT_COST = 30;
+
+  /* ---------------- 단어 데이터 ---------------- */
+  var WORDS = {
+    proverb: [
+      { a:'금강산도 식후경', h:'아무리 좋은 구경도 배가 불러야 한다는 뜻' },
+      { a:'티끌 모아 태산', h:'작은 것도 모으면 크게 된다는 뜻' },
+      { a:'낮말은 새가 듣고 밤말은 쥐가 듣는다', h:'말조심하라는 뜻' },
+      { a:'원숭이도 나무에서 떨어진다', h:'아무리 잘하는 사람도 실수한다는 뜻' },
+      { a:'소 잃고 외양간 고친다', h:'일이 벌어진 뒤에야 수습한다는 뜻' },
+      { a:'발 없는 말이 천 리 간다', h:'소문은 걷잡을 수 없이 퍼진다는 뜻' },
+      { a:'열 번 찍어 안 넘어가는 나무 없다', h:'꾸준히 하면 결국 이룬다는 뜻' },
+      { a:'우물 안 개구리', h:'좁은 세상만 아는 사람을 이르는 말' },
+      { a:'하늘의 별 따기', h:'이루기 몹시 어려운 일을 이르는 말' },
+      { a:'누워서 떡 먹기', h:'아주 하기 쉬운 일을 이르는 말' },
+      { a:'배보다 배꼽이 더 크다', h:'부수 비용이 본비용보다 크다는 뜻' },
+      { a:'돌다리도 두들겨 보고 건너라', h:'확실한 일도 조심하라는 뜻' },
+      { a:'세 살 버릇 여든까지 간다', h:'어릴 적 버릇은 고치기 어렵다는 뜻' },
+      { a:'등잔 밑이 어둡다', h:'가까이 있는 것을 오히려 모른다는 뜻' },
+      { a:'가는 말이 고와야 오는 말이 곱다', h:'남에게 잘해야 대접받는다는 뜻' },
+      { a:'개구리 올챙이 적 생각 못 한다', h:'잘난 뒤에 어려웠던 때를 잊는다는 뜻' },
+      { a:'사공이 많으면 배가 산으로 간다', h:'지시하는 사람이 많으면 일이 안 된다는 뜻' },
+      { a:'꿩 먹고 알 먹기', h:'한 번에 두 가지 이득을 본다는 뜻' },
+      { a:'호랑이도 제 말 하면 온다', h:'마침 이야기하던 사람이 나타난다는 뜻' },
+      { a:'아니 땐 굴뚝에 연기 나랴', h:'원인 없이 결과가 생기지 않는다는 뜻' },
+      { a:'고생 끝에 낙이 온다', h:'어려움을 견디면 좋은 날이 온다는 뜻' },
+      { a:'말 한마디에 천 냥 빚 갚는다', h:'말 한마디의 힘이 크다는 뜻' },
+      { a:'하나를 보면 열을 안다', h:'조그만 단서로 전체를 짐작한다는 뜻' },
+      { a:'빈 수레가 요란하다', h:'실속 없는 사람이 더 떠든다는 뜻' }
+    ],
+    idiom: [
+      { a:'일석이조', h:'한 번에 두 가지 이득을 봄' },
+      { a:'새옹지마', h:'좋고 나쁨은 미리 알 수 없음' },
+      { a:'오리무중', h:'앞이 보이지 않을 만큼 혼란스러움' },
+      { a:'대기만성', h:'큰 인물은 늦게 이루어진다' },
+      { a:'유비무환', h:'미리 대비하면 근심이 없다' },
+      { a:'자업자득', h:'자기가 한 일의 결과를 자기가 받음' },
+      { a:'이심전심', h:'말하지 않아도 마음이 통함' },
+      { a:'사면초가', h:'사방이 적에게 둘러싸여 고립됨' },
+      { a:'조삼모사', h:'잔꾀를 부려 남을 속임' },
+      { a:'금시초문', h:'이제 막 처음 들음' },
+      { a:'다다익선', h:'많으면 많을수록 좋음' },
+      { a:'유일무이', h:'오직 하나뿐이고 둘도 없음' },
+      { a:'전무후무', h:'앞에도 뒤에도 없을 만큼 드묾' },
+      { a:'이구동성', h:'여러 사람이 입을 모아 말함' },
+      { a:'백발백중', h:'쏘는 족족 다 맞힘' },
+      { a:'안하무인', h:'남을 업신여기고 건방짐' },
+      { a:'오매불망', h:'자나 깨나 잊지 못함' },
+      { a:'천고마비', h:'하늘은 높고 말은 살찌는 가을' },
+      { a:'온고지신', h:'옛것을 익혀 새것을 앎' },
+      { a:'반신반의', h:'반쯤 믿고 반쯤 의심함' },
+      { a:'자수성가', h:'맨손으로 시작해 성공함' },
+      { a:'동고동락', h:'괴로움도 즐거움도 함께함' },
+      { a:'살신성인', h:'자신을 희생해 옳은 일을 이룸' },
+      { a:'인과응보', h:'원인과 결과, 행한 대로 받음' }
+    ],
+    life: [
+      { a:'공기청정기', h:'미세먼지를 걸러 주는 가전' },
+      { a:'보조배터리', h:'밖에서 휴대폰을 충전하는 기기' },
+      { a:'무선이어폰', h:'줄 없이 귀에 꽂는 이어폰' },
+      { a:'자동판매기', h:'돈을 넣으면 음료가 나오는 기계' },
+      { a:'횡단보도', h:'차도 건너편으로 건너는 곳' },
+      { a:'손난로', h:'겨울에 손을 녹이는 물건' },
+      { a:'전기밥솥', h:'쌀을 넣고 밥을 짓는 가전' },
+      { a:'에스컬레이터', h:'계단처럼 움직이는 통로' },
+      { a:'리모컨', h:'멀리서 TV를 켜는 기기' },
+      { a:'알람시계', h:'정한 시각에 소리를 내는 시계' },
+      { a:'도시락', h:'가지고 다니며 먹는 밥' },
+      { a:'콘센트', h:'플러그를 꽂는 구멍' },
+      { a:'지퍼', h:'옷이나 가방을 여닫는 장치' },
+      { a:'가습기', h:'건조할 때 물을 뿜는 기기' },
+      { a:'선풍기', h:'더울 때 바람을 만드는 기기' },
+      { a:'전자레인지', h:'음식을 빨리 데우는 가전' },
+      { a:'냉장고', h:'식재료를 차갑게 보관하는 가전' },
+      { a:'세탁기', h:'빨래를 대신 해 주는 가전' },
+      { a:'청소기', h:'바닥 먼지를 빨아들이는 기기' },
+      { a:'스마트폰', h:'전화와 인터넷을 함께 쓰는 기기' },
+      { a:'편의점', h:'밤늦게도 문을 여는 가게' },
+      { a:'버스정류장', h:'버스를 기다리는 곳' },
+      { a:'미세먼지', h:'아주 작아서 폐까지 들어가는 먼지' },
+      { a:'우산', h:'비를 막으려고 펴는 물건' }
+    ]
+  };
+  var CATS = [
+    { id:'all',     ic:'🎲', lb:'전체 섞기', dc:'모든 종류' },
+    { id:'proverb', ic:'📜', lb:'속담',     dc:'말로 익힌 지혜' },
+    { id:'idiom',   ic:'🀄', lb:'사자성어', dc:'네 글자 숙어' },
+    { id:'life',    ic:'🏠', lb:'생활 단어', dc:'일상 속 사물' }
+  ];
+  var CAT_LABEL = { proverb:'속담', idiom:'사자성어', life:'생활 단어' };
+
+  /* ---------------- 초성 변환 ---------------- */
+  var CHO = ['ㄱ','ㄲ','ㄴ','ㄷ','ㄸ','ㄹ','ㅁ','ㅂ','ㅃ','ㅅ','ㅆ','ㅇ','ㅈ','ㅉ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+  function chosung(str){
+    var out = '';
+    for (var i=0;i<str.length;i++){
+      var ch = str.charCodeAt(i);
+      if (ch >= 0xAC00 && ch <= 0xD7A3){
+        out += CHO[Math.floor((ch - 0xAC00) / 588)];
+      } else {
+        out += str.charAt(i);
+      }
+    }
+    return out;
+  }
+
+  /* ---------------- 요소 ---------------- */
+  var $ = function(id){ return document.getElementById(id); };
+  var el = {
+    start: $('screen-start'), game: $('screen-game'), result: $('screen-result'),
+    cats: $('cats'), startBtn: $('startBtn'), bestTop: $('bestTop'), playsTop: $('playsTop'),
+    qidx: $('qidx'), comboPill: $('comboPill'), score: $('score'),
+    timerNum: $('timerNum'), timerArc: $('timerArc'), timerBox: $('timer'),
+    progress: $('progress'), qtag: $('qtag'), chosung: $('chosung'),
+    hintBox: $('hintBox'), qlen: $('qlen'), choices: $('choices'), feedback: $('feedback'),
+    hintBtn: $('hintBtn'), quitBtn: $('quitBtn'),
+    grade: $('grade'), gradeSub: $('gradeSub'), finalScore: $('finalScore'),
+    rCorrect: $('rCorrect'), rCombo: $('rCombo'), rBest: $('rBest'),
+    scoreArc: $('scoreArc'), wrongs: $('wrongs'), wrongList: $('wrongList'),
+    newBest: $('newBest'), againBtn: $('againBtn'), menuBtn: $('menuBtn'),
+    resultKicker: $('resultKicker'), toast: $('toast')
+  };
+
+  /* ---------------- 상태 ---------------- */
+  var state = {
+    cat: 'all',
+    screen: 'start',
+    queue: [],
+    idx: 0,
+    q: null,
+    score: 0,
+    combo: 0,
+    maxCombo: 0,
+    correct: 0,
+    hintsLeft: HINTS,
+    hintUsed: false,
+    locked: false,
+    remain: LIMIT,
+    wrongs: [],
+    tId: null,
+    best: loadNum(BEST_KEY),
+    plays: loadNum(PLAY_KEY)
+  };
+
+  function loadNum(k){
+    var v = parseInt(localStorage.getItem(k) || '0', 10);
+    return isFinite(v) && v > 0 ? v : 0;
+  }
+
+  /* ---------------- 유틸 ---------------- */
+  function shuffle(arr){
+    var a = arr.slice();
+    for (var i=a.length-1;i>0;i--){
+      var j = Math.floor(Math.random() * (i+1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  }
+  function toast(msg){
+    el.toast.textContent = msg;
+    el.toast.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function(){ el.toast.classList.remove('show'); }, 1700);
+  }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pad2(n){ return (n < 10 ? '0' : '') + n; }
+
+  /* ---------------- 시작 화면 ---------------- */
+  function renderCats(){
+    el.cats.innerHTML = CATS.map(function(c){
+      return '<button type="button" class="cat" data-cat="' + c.id + '" aria-pressed="' +
+        (state.cat === c.id ? 'true' : 'false') + '">' +
+        '<span class="ic" aria-hidden="true">' + c.ic + '</span>' +
+        '<span class="lb">' + c.lb + '</span>' +
+        '<span class="dc">' + c.dc + '</span></button>';
+    }).join('');
+  }
+
+  function poolFor(){
+    if (state.cat === 'all'){
+      var out = [];
+      ['proverb','idiom','life'].forEach(function(key){
+        WORDS[key].forEach(function(w){ out.push({ a:w.a, h:w.h, c:key }); });
+      });
+      return out;
+    }
+    return (WORDS[state.cat] || []).map(function(w){ return { a:w.a, h:w.h, c:state.cat }; });
+  }
+
+  /* ---------------- 게임 시작 ---------------- */
+  function startGame(){
+    var pool = poolFor();
+    var picked = shuffle(pool).slice(0, Math.min(ROUNDS, pool.length));
+    state.queue = picked;
+    state.idx = 0; state.score = 0; state.combo = 0; state.maxCombo = 0;
+    state.correct = 0; state.hintsLeft = HINTS; state.wrongs = [];
+    state.locked = false; state.screen = 'game';
+    state.plays += 1;
+    try { localStorage.setItem(PLAY_KEY, String(state.plays)); } catch(e){}
+    try { localStorage.setItem(CAT_KEY, state.cat); } catch(e){}
+    el.playsTop.textContent = state.plays;
+    showScreen('game');
+    nextQuestion();
+  }
+
+  function showScreen(name){
+    state.screen = name;
+    el.start.classList.toggle('hidden', name !== 'start');
+    el.game.classList.toggle('hidden', name !== 'game');
+    el.result.classList.toggle('hidden', name !== 'result');
+    window.scrollTo(0, 0);
+  }
+
+  function nextQuestion(){
+    if (state.idx >= state.queue.length){ finish(); return; }
+    clearInterval(state.tId);
+    var q = state.queue[state.idx];
+    state.q = q;
+    state.locked = false;
+    state.hintUsed = false;
+    state.remain = LIMIT;
+
+    // 보기 3개 + 정답 1개
+    var pool = WORDS[q.c] || [];
+    var others = shuffle(pool.filter(function(w){ return w.a !== q.a; })).slice(0, 3);
+    while (others.length < 3){
+      var all = shuffle(pool).filter(function(w){
+        return w.a !== q.a && !others.some(function(o){ return o.a === w.a; });
+      });
+      if (!all.length) break;
+      others.push(all[0]);
+    }
+    var opts = shuffle(others.map(function(w){ return w.a; }).concat([q.a]));
+
+    el.qidx.textContent = pad2(state.idx + 1) + ' / ' + pad2(state.queue.length);
+    el.score.textContent = state.score;
+    el.qtag.textContent = CAT_LABEL[q.c] || '퀴즈';
+    el.chosung.textContent = chosung(q.a);
+    el.qlen.textContent = q.a.replace(/\s/g,'').length + '글자';
+    el.hintBox.textContent = '힌트를 쓰면 이 자리에 뜻이 나옵니다.';
+    el.hintBox.classList.remove('show');
+    el.feedback.textContent = '';
+    el.feedback.className = 'feedback';
+    el.comboPill.classList.toggle('on', state.combo >= 2);
+    el.comboPill.textContent = 'COMBO ×' + state.combo;
+    el.progress.style.width = Math.round((state.idx / state.queue.length) * 100) + '%';
+    el.hintBtn.disabled = state.hintsLeft <= 0;
+    el.hintBtn.innerHTML = '💡 힌트 <small>' + state.hintsLeft + '회 · −' + HINT_COST + '점</small>';
+
+    el.choices.innerHTML = opts.map(function(text, i){
+      return '<button type="button" class="choice" data-opt="' + esc(text) + '">' +
+        '<span class="key" aria-hidden="true">' + (i+1) + '</span>' +
+        '<span class="txt">' + esc(text) + '</span></button>';
+    }).join('');
+    el.choices.setAttribute('aria-label', '보기 ' + opts.length + '개');
+
+    updateTimer(true);
+    state.tId = setInterval(tick, 100);
+    // 접근성: 문제 낭독
+    el.chosung.setAttribute('aria-label', '초성 ' + chosung(q.a).split('').join(' '));
+  }
+
+  function tick(){
+    state.remain -= 0.1;
+    if (state.remain <= 0){
+      clearInterval(state.tId);
+      state.remain = 0;
+      updateTimer();
+      if (!state.locked) timeUp();
+      return;
+    }
+    updateTimer();
+  }
+
+  function updateTimer(fresh){
+    var ratio = Math.max(0, state.remain / LIMIT);
+    var circ = 2 * Math.PI * 19;
+    el.timerArc.style.strokeDashoffset = String(circ * (1 - ratio));
+    el.timerArc.style.stroke = ratio > 0.45 ? '#ffe066' : (ratio > 0.2 ? '#ffb84d' : '#ff7b93');
+    el.timerNum.textContent = String(Math.ceil(state.remain));
+    el.timerBox.classList.toggle('low', ratio <= 0.2);
+    if (fresh) el.progress.style.width = Math.round((state.idx / state.queue.length) * 100) + '%';
+  }
+
+  function lockChoices(correctText, pickedText){
+    var btns = el.choices.querySelectorAll('.choice');
+    Array.prototype.forEach.call(btns, function(b){
+      b.disabled = true;
+      var text = b.getAttribute('data-opt');
+      if (text === correctText) b.classList.add('correct');
+      else if (text === pickedText) b.classList.add('wrong');
+      else b.classList.add('dim');
+    });
+  }
+
+  function answer(picked){
+    if (state.locked || state.screen !== 'game') return;
+    state.locked = true;
+    clearInterval(state.tId);
+    var correctText = state.q.a;
+    var ok = picked === correctText;
+    lockChoices(correctText, picked);
+
+    if (ok){
+      var timeBonus = Math.round((state.remain / LIMIT) * 50);
+      var comboBonus = state.combo >= 1 ? state.combo * 20 : 0;
+      var pts = 100 + timeBonus + comboBonus - (state.hintUsed ? HINT_COST : 0);
+      if (pts < 20) pts = 20;
+      state.score += pts;
+      state.correct += 1;
+      state.combo += 1;
+      if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+      el.score.textContent = state.score;
+      el.comboPill.classList.toggle('on', state.combo >= 2);
+      el.comboPill.textContent = 'COMBO ×' + state.combo;
+      el.feedback.className = 'feedback good';
+      el.feedback.innerHTML = '+' + pts + '점 <span class="pts">' +
+        (comboBonus ? '콤보 +' + comboBonus + ' · ' : '') +
+        (timeBonus ? '속도 +' + timeBonus : '') + '</span>' +
+        (state.combo >= 2 ? ' · ' + state.combo + '연속!' : '');
+    } else {
+      state.combo = 0;
+      el.comboPill.classList.remove('on');
+      el.feedback.className = 'feedback bad';
+      el.feedback.textContent = '아쉬워요! 정답은 “' + correctText + '”';
+      state.wrongs.push({ a: correctText, h: state.q.h, picked: picked });
+    }
+
+    state.idx += 1;
+    el.progress.style.width = Math.round((state.idx / state.queue.length) * 100) + '%';
+    setTimeout(function(){
+      if (state.screen === 'game') nextQuestion();
+    }, ok ? 850 : 1500);
+  }
+
+  function timeUp(){
+    state.locked = true;
+    lockChoices(state.q.a, null);
+    state.combo = 0;
+    el.comboPill.classList.remove('on');
+    el.feedback.className = 'feedback bad';
+    el.feedback.textContent = '시간 초과! 정답은 “' + state.q.a + '”';
+    state.wrongs.push({ a: state.q.a, h: state.q.h, picked: null });
+    state.idx += 1;
+    el.progress.style.width = Math.round((state.idx / state.queue.length) * 100) + '%';
+    setTimeout(function(){
+      if (state.screen === 'game') nextQuestion();
+    }, 1500);
+  }
+
+  function useHint(){
+    if (state.locked || state.hintsLeft <= 0 || !state.q) return;
+    if (state.hintUsed){ toast('이미 힌트를 봤어요'); return; }
+    state.hintsLeft -= 1;
+    state.hintUsed = true;
+    el.hintBox.textContent = '💡 ' + state.q.h;
+    el.hintBox.classList.add('show');
+    el.hintBtn.disabled = state.hintsLeft <= 0;
+    el.hintBtn.innerHTML = '💡 힌트 <small>' + state.hintsLeft + '회 · −' + HINT_COST + '점</small>';
+    toast('힌트 사용 · 정답 시 ' + HINT_COST + '점 차감');
+  }
+
+  /* ---------------- 결과 ---------------- */
+  function gradeFor(score, correct){
+    if (correct === state.queue.length && score >= 1200) return ['초성 마스터', '완벽해요. 이 정도면 퀴즈방 MC 가능!'];
+    if (correct >= 8) return ['초성 고수', '웬만한 초성은 다 읽으시네요.'];
+    if (correct >= 6) return ['초성 중수', '조금만 더 하면 고수입니다.'];
+    if (correct >= 4) return ['초성 새싹', '익숙한 단어부터 다시 도전해 보세요.'];
+    return ['초성 입문', '힌트를 적극적으로 써 보세요. 금방 늘어요.'];
+  }
+
+  function finish(){
+    clearInterval(state.tId);
+    showScreen('result');
+    var total = state.queue.length;
+    var g = gradeFor(state.score, state.correct);
+    el.grade.textContent = g[0];
+    el.gradeSub.textContent = total + '문제 중 ' + state.correct + '문제 정답 · ' + g[1];
+    el.finalScore.textContent = state.score;
+    el.rCorrect.textContent = state.correct + '/' + total;
+    el.rCombo.textContent = state.maxCombo;
+    el.resultKicker.textContent = CAT_LABEL[state.cat] || '전체 섞기';
+
+    var isBest = state.score > state.best;
+    if (isBest){
+      state.best = state.score;
+      try { localStorage.setItem(BEST_KEY, String(state.best)); } catch(e){}
+    }
+    el.newBest.hidden = !isBest || state.score === 0;
+    el.bestTop.textContent = state.best;
+    el.rBest.textContent = state.best;
+
+    // 점수 링: 1500점 만점 기준
+    var ratio = Math.min(1, state.score / 1500);
+    var circ = 2 * Math.PI * 71;
+    el.scoreArc.style.strokeDashoffset = String(circ);
+    requestAnimationFrame(function(){
+      el.scoreArc.style.transition = 'stroke-dashoffset .9s cubic-bezier(.16,1,.3,1)';
+      el.scoreArc.style.strokeDashoffset = String(circ * (1 - ratio));
+    });
+
+    if (state.wrongs.length){
+      el.wrongs.hidden = false;
+      el.wrongList.innerHTML = state.wrongs.map(function(w){
+        return '<li><b>' + esc(w.a) + '</b><span>' + esc(chosung(w.a)) + ' · ' + esc(w.h) + '</span></li>';
+      }).join('');
+    } else {
+      el.wrongs.hidden = true;
+      el.wrongList.innerHTML = '';
+    }
+  }
+
+  function quit(){
+    clearInterval(state.tId);
+    if (state.idx > 0){
+      finish();
+    } else {
+      showScreen('start');
+    }
+  }
+
+  /* ---------------- 이벤트 ---------------- */
+  el.cats.addEventListener('click', function(e){
+    var b = e.target.closest('[data-cat]');
+    if (!b) return;
+    state.cat = b.getAttribute('data-cat');
+    renderCats();
+  });
+
+  el.startBtn.addEventListener('click', startGame);
+  el.againBtn.addEventListener('click', startGame);
+  el.menuBtn.addEventListener('click', function(){ showScreen('start'); renderCats(); });
+  el.quitBtn.addEventListener('click', quit);
+  el.hintBtn.addEventListener('click', useHint);
+
+  el.choices.addEventListener('click', function(e){
+    var b = e.target.closest('.choice');
+    if (!b || b.disabled) return;
+    answer(b.getAttribute('data-opt'));
+  });
+
+  document.addEventListener('keydown', function(e){
+    if (state.screen !== 'game') return;
+    var k = e.key;
+    if (k >= '1' && k <= '4'){
+      var btns = el.choices.querySelectorAll('.choice');
+      var b = btns[parseInt(k,10) - 1];
+      if (b && !b.disabled){ e.preventDefault(); answer(b.getAttribute('data-opt')); }
+    } else if (k === 'h' || k === 'H'){
+      e.preventDefault(); useHint();
+    } else if (k === 'Escape'){
+      e.preventDefault(); quit();
+    }
+  });
+
+  /* ---------------- 초기화 ---------------- */
+  var savedCat = '';
+  try { savedCat = localStorage.getItem(CAT_KEY) || ''; } catch(e){}
+  if (savedCat && (savedCat === 'all' || WORDS[savedCat])) state.cat = savedCat;
+  el.bestTop.textContent = state.best;
+  el.playsTop.textContent = state.plays;
+  renderCats();
+
+  /* 테스트·임베드용 최소 API (읽기 전용) */
+  window.ChosungQuiz = {
+    chosung: chosung,
+    state: function(){
+      return {
+        screen: state.screen, idx: state.idx, total: state.queue.length,
+        score: state.score, combo: state.combo, maxCombo: state.maxCombo,
+        correct: state.correct, best: state.best, hintsLeft: state.hintsLeft,
+        answer: state.q && state.q.a, locked: state.locked
+      };
+    },
+    options: function(){
+      return Array.prototype.map.call(el.choices.querySelectorAll('.choice'), function(b){
+        return b.getAttribute('data-opt');
+      });
+    }
+  };
+})();
+</script>
+</body>
+</html>
