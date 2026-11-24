@@ -48,11 +48,59 @@
   .go{font-size:12.5px;font-weight:800;color:var(--a)}
   .card.v .go{color:#b3a8ff}
   .card.g .go{color:var(--c)}
+
+  /* ---- 보기 방식 (리스트 / 그리드) ---- */
+  .viewbar{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin:-6px 0 18px}
+  .viewbar-t{font-size:11.5px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#6f7d8b}
+  .viewswitch{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);
+    border-radius:11px;background:rgba(255,255,255,.04)}
+  .viewswitch button{appearance:none;-webkit-appearance:none;border:0;background:transparent;color:var(--dim);
+    font:inherit;font-size:12.5px;font-weight:800;letter-spacing:-.2px;padding:6px 12px;border-radius:8px;
+    cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;
+    transition:background .15s,color .15s,box-shadow .15s}
+  .viewswitch button span[aria-hidden]{font-size:12px;opacity:.85}
+  .viewswitch button:hover{color:var(--txt);background:rgba(255,255,255,.07)}
+  .viewswitch button[aria-pressed="true"]{background:rgba(94,233,166,.16);color:#d7fbe8;
+    box-shadow:inset 0 0 0 1px rgba(94,233,166,.35)}
+  .viewswitch button[aria-pressed="true"] span[aria-hidden]{opacity:1}
+
+  /* 리스트: 한 줄에 아이콘 · 이름 · 설명 */
+  html[data-layout="list"] .cards{grid-template-columns:1fr;gap:10px}
+  html[data-layout="list"] a.card{display:grid;grid-template-columns:42px minmax(0,1fr) auto;
+    grid-template-areas:"ico head go" "ico tag go";align-items:center;
+    column-gap:13px;row-gap:2px;padding:12px 14px}
+  html[data-layout="list"] a.card .ico{grid-area:ico;width:42px;height:42px;margin:0;font-size:20px}
+  html[data-layout="list"] a.card h3{grid-area:head;margin:0;font-size:14.5px}
+  html[data-layout="list"] a.card .tagline{grid-area:tag;margin:0;min-height:0;font-size:12px;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden}
+  html[data-layout="list"] a.card .go{grid-area:go;font-size:12px;white-space:nowrap}
+
+  /* 그리드: 아이콘 + 앱 이름만 */
+  html[data-layout="grid"] .cards{grid-template-columns:repeat(auto-fill,minmax(100px,1fr));gap:10px}
+  html[data-layout="grid"] a.card{display:flex;flex-direction:column;align-items:center;justify-content:center;
+    text-align:center;padding:13px 8px;min-height:104px}
+  html[data-layout="grid"] a.card .ico{margin:0 0 9px;width:40px;height:40px;font-size:19px}
+  html[data-layout="grid"] a.card h3{margin:0;font-size:12.5px;line-height:1.35;overflow-wrap:anywhere;
+    display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+  html[data-layout="grid"] a.card .tagline,
+  html[data-layout="grid"] a.card .go{display:none}
+  @media(min-width:700px){
+    html[data-layout="grid"] .cards{grid-template-columns:repeat(auto-fill,minmax(118px,1fr));gap:12px}
+    html[data-layout="list"] a.card .tagline{display:block;-webkit-line-clamp:unset;overflow:visible}
+  }
   footer{margin-top:14px;border-top:1px solid var(--line);padding-top:20px;
     font-size:12.5px;color:#6f7d8b;display:flex;gap:14px;flex-wrap:wrap;justify-content:space-between}
   footer a{color:#94a3b1}
   footer code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-size:11.5px}
 </style>
+<script>
+  /* 첫 페인트 전에 보기 방식 결정 — 깜빡임 방지 */
+  (function () {
+    var l = 'list';
+    try { l = localStorage.getItem('hub:layout:v1') === 'grid' ? 'grid' : 'list'; } catch (e) {}
+    document.documentElement.dataset.layout = l;
+  })();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -69,6 +117,14 @@
       <span class="chip">기록은 내 브라우저에만</span>
     </div>
   </header>
+
+  <div class="viewbar">
+    <span class="viewbar-t">보기 방식</span>
+    <div class="viewswitch" role="group" aria-label="보기 방식">
+      <button type="button" data-layout="list" aria-pressed="true"><span aria-hidden="true">☰</span> 리스트</button>
+      <button type="button" data-layout="grid" aria-pressed="false"><span aria-hidden="true">▦</span> 그리드</button>
+    </div>
+  </div>
 
   <!-- DAYS:START — 새 날짜는 아래 형식으로 이 블록 안에 날짜 내림차순으로 추가 (허브·앱 링크·chip 개수도 함께 갱신) -->
   <section class="day" id="d2026-11-24">
@@ -126,5 +182,32 @@
     <span><a href="./portfolio/">포트폴리오</a> · <a href="https://github.com/paradevlab7-cmyk/Webapp" target="_blank" rel="noopener">GitHub 저장소</a> · 경로 <code>apps/YYYY-MM-DD/{slug}/</code></span>
   </footer>
 </div>
+<script>
+  (function () {
+    var KEY = 'hub:layout:v1';
+    var box = document.querySelector('.viewswitch');
+    var cur = document.documentElement.dataset.layout === 'grid' ? 'grid' : 'list';
+
+    function paint(v) {
+      if (!box) return;
+      var bs = box.querySelectorAll('button[data-layout]');
+      for (var i = 0; i < bs.length; i++) {
+        bs[i].setAttribute('aria-pressed', bs[i].getAttribute('data-layout') === v ? 'true' : 'false');
+      }
+    }
+    paint(cur);
+
+    if (box) box.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('button[data-layout]') : null;
+      if (!b) return;
+      var v = b.getAttribute('data-layout') === 'grid' ? 'grid' : 'list';
+      if (v === cur) return;
+      cur = v;
+      try { localStorage.setItem(KEY, v); } catch (err) {}
+      document.documentElement.dataset.layout = v;
+      paint(v);
+    });
+  })();
+</script>
 </body>
 </html>

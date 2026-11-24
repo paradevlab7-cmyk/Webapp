@@ -8,6 +8,7 @@
   var FAV_KEY = 'portfolio:favs:v1';
   var THEME_KEY = 'portfolio:theme:v1';
   var VIEW_KEY = 'portfolio:view:v1';
+  var LAYOUT_KEY = 'portfolio:layout:v1';
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
 
@@ -20,6 +21,7 @@
     favFilter: $('#favFilter'),
     favCount: $('#favCount'),
     groupToggle: $('#groupToggle'),
+    layoutToggle: $('#layoutToggle'),
     resultLine: $('#resultLine'),
     empty: $('#empty'),
     resetAll: $('#resetAll'),
@@ -51,6 +53,7 @@
     sort: 'new',
     favOnly: false,
     group: loadView() === 'day',
+    layout: loadLayout(),
     favs: loadFavs(),
     lastFocus: null,
     openSlug: null
@@ -73,6 +76,22 @@
   }
   function saveView() {
     try { localStorage.setItem(VIEW_KEY, state.group ? 'day' : 'grid'); } catch (e) {}
+  }
+
+  /* 리스트 / 그리드 보기 방식 (portfolio:layout:v1) */
+  function loadLayout() {
+    try { return localStorage.getItem(LAYOUT_KEY) === 'grid' ? 'grid' : 'list'; } catch (e) { return 'list'; }
+  }
+  function saveLayout() {
+    try { localStorage.setItem(LAYOUT_KEY, state.layout); } catch (e) {}
+  }
+  function applyLayout() {
+    document.documentElement.dataset.layout = state.layout;
+    if (!el.layoutToggle) return;
+    var btns = el.layoutToggle.querySelectorAll('.seg-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].setAttribute('aria-pressed', btns[i].getAttribute('data-layout') === state.layout ? 'true' : 'false');
+    }
   }
 
   /* ------------------------------ 유틸 ------------------------------ */
@@ -346,7 +365,8 @@
         (state.favOnly ? ' · 즐겨찾기' : '') +
         (state.query ? ' · “' + esc(state.query) + '” 검색' : '') +
         ' · ' + (state.sort === 'name' ? '이름순' : state.sort === 'old' ? '오래된순' : '최신순') +
-        (state.group ? ' · 날짜별' : '');
+        (state.group ? ' · 날짜별' : '') +
+        (state.layout === 'grid' ? ' · 그리드 보기' : ' · 리스트 보기');
     } else {
       el.resultLine.textContent = '';
     }
@@ -518,7 +538,19 @@
     state.group = !state.group;
     saveView();
     render();
-    toast(state.group ? '날짜별로 묶어서 봅니다' : '한 화면 그리드로 봅니다');
+    toast(state.group ? '날짜별로 묶어서 봅니다' : '한 화면으로 봅니다');
+  });
+
+  el.layoutToggle.addEventListener('click', function (e) {
+    var btn = e.target.closest('.seg-btn');
+    if (!btn) return;
+    var next = btn.getAttribute('data-layout') === 'grid' ? 'grid' : 'list';
+    if (next === state.layout) return;
+    state.layout = next;
+    saveLayout();
+    applyLayout();
+    render();
+    toast(next === 'grid' ? '그리드로 봅니다 — 아이콘과 이름만' : '리스트로 봅니다 — 소개·태그까지');
   });
 
   el.favFilter.addEventListener('click', function () {
@@ -600,5 +632,6 @@
     else closeModal(true);
   });
 
+  applyLayout();
   load();
 })();

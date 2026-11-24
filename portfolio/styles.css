@@ -295,7 +295,31 @@ html[data-theme="light"] .icon-btn .ico-moon{opacity:0;transform:rotate(60deg) s
 }
 .search-clear:hover{background:var(--surface-2);color:var(--txt)}
 
-.toolbar-right{display:flex;gap:8px;align-items:center;flex:0 0 auto}
+.toolbar-right{display:flex;gap:8px;align-items:center;flex:0 0 auto;flex-wrap:wrap}
+
+/* 보기 방식 세그먼트 (리스트 / 그리드) */
+.seg{
+  display:inline-flex;align-items:center;gap:2px;
+  padding:3px;border-radius:12px;
+  border:1px solid var(--line);background:var(--surface);
+}
+.seg-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  padding:8px 11px;border-radius:9px;border:1px solid transparent;
+  background:transparent;color:var(--dim);
+  font-size:12.5px;font-weight:800;letter-spacing:-.2px;
+  cursor:pointer;white-space:nowrap;
+  transition:background .16s,color .16s,border-color .16s;
+}
+.seg-btn span[aria-hidden]{font-size:12px;opacity:.85;transition:opacity .16s}
+.seg-btn:hover{color:var(--txt);background:var(--surface-2)}
+.seg-btn[aria-pressed="true"]{
+  color:var(--accent-ink);
+  background:var(--accent);
+  border-color:transparent;
+  box-shadow:0 10px 22px -16px color-mix(in srgb, var(--accent) 90%, transparent);
+}
+.seg-btn[aria-pressed="true"] span[aria-hidden]{opacity:1}
 
 .select-wrap{position:relative;display:inline-flex}
 #sortSelect{
@@ -537,6 +561,51 @@ mark{
   color:inherit;border-radius:3px;padding:0 1px;
 }
 
+/* ---------------- 보기 방식: 리스트 / 그리드 ---------------- */
+
+/* 리스트: 한 줄에 정보가 다 읽히는 와이드 행 */
+html[data-layout="list"] .grid:not(.grouped){grid-template-columns:1fr;gap:10px}
+html[data-layout="list"] .daygroup-cards{grid-template-columns:1fr;gap:10px}
+
+/* 그리드: 아이콘 + 앱 이름만 남기는 런처 타일 */
+html[data-layout="grid"] .grid:not(.grouped){
+  grid-template-columns:repeat(auto-fill,minmax(108px,1fr));
+  gap:10px;
+  align-items:stretch;
+}
+html[data-layout="grid"] .daygroup-cards{
+  grid-template-columns:repeat(auto-fill,minmax(108px,1fr));
+  gap:10px;
+}
+html[data-layout="grid"] .card{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:0;
+  padding:14px 8px 12px;
+  min-height:108px;
+  text-align:center;
+}
+html[data-layout="grid"] .card:hover{transform:translateY(-3px)}
+html[data-layout="grid"] .card::before{opacity:.55}
+html[data-layout="grid"] .card-top{
+  flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;margin:0;width:100%;
+}
+html[data-layout="grid"] .app-ico{
+  width:44px;height:44px;border-radius:14px;font-size:21px;
+}
+html[data-layout="grid"] .card-head{flex:0 0 auto;width:100%;padding:0}
+html[data-layout="grid"] .app-name{
+  margin:0;
+  font-size:12.5px;line-height:1.4;letter-spacing:-.2px;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
+  overflow:hidden;
+}
+html[data-layout="grid"] .app-meta,
+html[data-layout="grid"] .fav,
+html[data-layout="grid"] .app-summary,
+html[data-layout="grid"] .tags,
+html[data-layout="grid"] .card-foot{display:none}
+
 /* ---------------- 빈 상태 / 로딩 ---------------- */
 .empty{
   display:grid;place-items:center;text-align:center;
@@ -670,6 +739,8 @@ mark{
   .grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
   .daygroup-cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
   .stats{grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  html[data-layout="grid"] .grid:not(.grouped){grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:12px}
+  html[data-layout="grid"] .daygroup-cards{grid-template-columns:repeat(auto-fill,minmax(142px,1fr));gap:12px}
   .modal{place-items:center}
   .modal-card{
     border-radius:22px;border-bottom:1px solid var(--line);
@@ -687,6 +758,43 @@ mark{
   .daygroup-cards{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
   .hero{padding:66px 0 40px}
   .stats{margin-bottom:38px}
+  html[data-layout="grid"] .grid:not(.grouped){grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:14px}
+  html[data-layout="grid"] .daygroup-cards{grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:14px}
+  html[data-layout="grid"] .card{min-height:132px}
+
+  /* 리스트 보기 — 데스크톱은 한 줄에 [아이콘 · 이름/분류 · 소개 · 날짜 · ★] */
+  html[data-layout="list"] .card{
+    display:grid;
+    grid-template-columns:auto minmax(0,.85fr) minmax(0,1.45fr) auto 34px;
+    grid-template-areas:
+      "ico head summary foot fav"
+      "ico tags tags foot fav";
+    align-items:center;
+    column-gap:18px;row-gap:7px;
+    padding:14px 14px 14px 18px;
+  }
+  html[data-layout="list"] .card:hover{transform:translateY(-2px)}
+  html[data-layout="list"] .card-top{display:contents}
+  html[data-layout="list"] .app-ico{grid-area:ico;width:46px;height:46px;border-radius:14px;font-size:21px}
+  html[data-layout="list"] .card-head{grid-area:head;padding:0}
+  html[data-layout="list"] .app-summary{grid-area:summary;margin:0;font-size:13px;line-height:1.55}
+  html[data-layout="list"] .tags{grid-area:tags;margin:0}
+  html[data-layout="list"] .card-foot{
+    grid-area:foot;margin:0;padding:0;border:0;
+    flex-direction:column;align-items:flex-end;gap:2px;
+  }
+  html[data-layout="list"] .card-date{font-size:10.5px;white-space:nowrap}
+  html[data-layout="list"] .fav{
+    grid-area:fav;
+    position:relative;top:auto;right:auto;
+    place-self:center;
+  }
+}
+
+@media (max-width:560px){
+  .toolbar-right{width:100%;flex-wrap:wrap}
+  .seg{flex:1 1 100%}
+  .seg-btn{flex:1 1 0}
 }
 
 @media (max-width:420px){
