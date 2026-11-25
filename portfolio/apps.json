@@ -4,15 +4,109 @@
     "maker": "paradevlab7",
     "tagline": "설치도 로그인도 없이 브라우저에서 바로 쓰는 웹앱을 하루 3개씩 만듭니다.",
     "repo": "https://github.com/paradevlab7-cmyk/Webapp",
-    "updated": "2026-11-24"
+    "updated": "2026-11-25"
   },
   "categories": [
-    { "id": "util", "label": "실용·계산", "icon": "🧮" },
-    { "id": "game", "label": "게임·두뇌", "icon": "🎮" },
-    { "id": "finance", "label": "금융·생산성", "icon": "💸" },
-    { "id": "life", "label": "일상·도구", "icon": "🧰" }
+    {
+      "id": "util",
+      "label": "실용·계산",
+      "icon": "🧮"
+    },
+    {
+      "id": "game",
+      "label": "게임·두뇌",
+      "icon": "🎮"
+    },
+    {
+      "id": "finance",
+      "label": "금융·생산성",
+      "icon": "💸"
+    },
+    {
+      "id": "life",
+      "label": "일상·도구",
+      "icon": "🧰"
+    }
   ],
   "apps": [
+    {
+      "slug": "loan-compare",
+      "name": "대출 상환 비교 계산기",
+      "date": "2026-11-25",
+      "category": "finance",
+      "icon": "🏦",
+      "accent": "#61a8ff",
+      "summary": "원리금균등·원금균등·만기일시를 한 번에, 중도상환 효과까지",
+      "description": "대출 원금·금리·기간을 넣으면 세 가지 상환 방식의 월 납입액과 총이자를 나란히 비교합니다. 거치기간과 중도상환 금액·시점·수수료율까지 반영해 다시 계산하고, 중도상환으로 실제로 아끼는 이자를 수수료와 함께 보여 줍니다.",
+      "features": [
+        "원리금균등·원금균등·만기일시 3방식 월 납입액·총이자 비교",
+        "거치기간 중 이자만 내는 구간 반영",
+        "중도상환 금액·시점·수수료율 입력 후 잔여 기간 재계산",
+        "연도별 원금·이자 구성 차트와 연도/월별 상환 스케줄",
+        "상환 스케줄 CSV 내려받기, 조건은 브라우저에 저장"
+      ],
+      "tags": [
+        "대출",
+        "이자",
+        "상환",
+        "중도상환",
+        "계산기"
+      ],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-25/loan-compare/",
+      "path": "apps/2026-11-25/loan-compare/"
+    },
+    {
+      "slug": "type-race",
+      "name": "타자 속도 챌린지",
+      "date": "2026-11-25",
+      "category": "game",
+      "icon": "📝",
+      "accent": "#b19bff",
+      "summary": "한국어·영문 문장으로 타수와 정확도 재기",
+      "description": "한국어와 영문 문장을 15·30·60초 동안 입력해 타수(CPM)·WPM·정확도를 측정하는 타이핑 연습 게임입니다. 틀린 글자는 즉시 빨갛게 표시되고 점수에 들어가지 않아, 빠르기보다 정확한 입력을 먼저 익히게 합니다. 최고 기록과 최근 7회 기록이 브라우저에 쌓입니다.",
+      "features": [
+        "한국어 12문장·영문 12문장, 15·30·60초 모드",
+        "실시간 타수(CPM)·WPM·정확도·오타 수 표시",
+        "글자 단위 정오답 표시와 진행 바",
+        "등급(S~D) 판정과 최고 기록 갱신 알림",
+        "최근 7회 기록 막대 그래프, 언어별 최고 기록 저장"
+      ],
+      "tags": [
+        "타자",
+        "타수",
+        "정확도",
+        "WPM",
+        "타이핑연습"
+      ],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-25/type-race/",
+      "path": "apps/2026-11-25/type-race/"
+    },
+    {
+      "slug": "img-resize",
+      "name": "이미지 리사이즈·압축",
+      "date": "2026-11-25",
+      "category": "life",
+      "icon": "🖼️",
+      "accent": "#ffb86b",
+      "summary": "Canvas로 브라우저 안에서만 줄이고 변환",
+      "description": "사진을 올리면 브라우저 안에서만 크기를 줄이고 JPEG·PNG·WebP로 변환합니다. 원본과 결과를 나란히 보며 용량이 얼마나 줄었는지 확인하고 바로 내려받을 수 있습니다. 파일이 서버로 전송되지 않아 개인 사진도 부담 없이 다룰 수 있습니다.",
+      "features": [
+        "비율 유지 리사이즈와 25~100% 프리셋",
+        "90도 단위 회전, 최대 8000px",
+        "JPEG·PNG·WebP 변환과 품질 슬라이더",
+        "원본 대비 용량·압축률 비교와 결과 미리보기",
+        "파일명 접미사 설정·바로 내려받기, 설정 저장"
+      ],
+      "tags": [
+        "이미지",
+        "리사이즈",
+        "압축",
+        "WebP",
+        "변환"
+      ],
+      "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-25/img-resize/",
+      "path": "apps/2026-11-25/img-resize/"
+    },
     {
       "slug": "split-bill",
       "name": "N빵 정산기",
@@ -29,7 +123,13 @@
         "정산 결과를 단톡방에 붙일 수 있게 복사",
         "참여자·항목을 브라우저에 자동 저장"
       ],
-      "tags": ["더치페이", "정산", "모임", "회비", "계산기"],
+      "tags": [
+        "더치페이",
+        "정산",
+        "모임",
+        "회비",
+        "계산기"
+      ],
       "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-24/split-bill/",
       "path": "apps/2026-11-24/split-bill/"
     },
@@ -49,7 +149,14 @@
         "힌트 2회(뜻 공개, −30점)",
         "최고 점수 저장과 틀린 문제 복습"
       ],
-      "tags": ["초성", "퀴즈", "속담", "사자성어", "게임", "두뇌"],
+      "tags": [
+        "초성",
+        "퀴즈",
+        "속담",
+        "사자성어",
+        "게임",
+        "두뇌"
+      ],
       "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-24/chosung-quiz/",
       "path": "apps/2026-11-24/chosung-quiz/"
     },
@@ -69,7 +176,13 @@
         "오늘 집중 시간·세션·연속 일수 기록",
         "최근 7일 막대 그래프와 세션 기록"
       ],
-      "tags": ["뽀모도로", "타이머", "집중", "생산성", "백색소음"],
+      "tags": [
+        "뽀모도로",
+        "타이머",
+        "집중",
+        "생산성",
+        "백색소음"
+      ],
       "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-24/focus-pomodoro/",
       "path": "apps/2026-11-24/focus-pomodoro/"
     },
@@ -89,7 +202,14 @@
         "남은 칼로리 게이지와 최근 7일 막대 그래프",
         "CSV 내려받기와 기록 공유"
       ],
-      "tags": ["칼로리", "단백질", "식단", "다이어트", "계산기", "건강"],
+      "tags": [
+        "칼로리",
+        "단백질",
+        "식단",
+        "다이어트",
+        "계산기",
+        "건강"
+      ],
       "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-23/calorie-coach/",
       "path": "apps/2026-11-23/calorie-coach/"
     },
@@ -108,7 +228,13 @@
         "난이도 3단계와 최고 연속 승리 기록",
         "키보드 1·2·3으로 바로 플레이"
       ],
-      "tags": ["가위바위보", "AI", "두뇌", "게임", "패턴분석"],
+      "tags": [
+        "가위바위보",
+        "AI",
+        "두뇌",
+        "게임",
+        "패턴분석"
+      ],
       "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-23/rps-mind/",
       "path": "apps/2026-11-23/rps-mind/"
     },
@@ -128,7 +254,13 @@
         "월 예산 초과 알림",
         "항목 수정·삭제와 CSV 내보내기"
       ],
-      "tags": ["구독", "가계부", "절약", "대시보드", "금융"],
+      "tags": [
+        "구독",
+        "가계부",
+        "절약",
+        "대시보드",
+        "금융"
+      ],
       "url": "https://paradevlab7-cmyk.github.io/Webapp/apps/2026-11-23/subs-dashboard/",
       "path": "apps/2026-11-23/subs-dashboard/"
     }

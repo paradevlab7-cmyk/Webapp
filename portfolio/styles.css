@@ -435,6 +435,19 @@ html[data-theme="light"] .icon-btn .ico-moon{opacity:0;transform:rotate(60deg) s
   border-radius:999px;padding:2px 9px;
 }
 .daygroup-cards{display:grid;grid-template-columns:1fr;gap:14px}
+/* 그룹 헤더의 그날 카테고리 요약 */
+.dg-cats{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+.dg-cat{
+  display:inline-flex;align-items:center;gap:4px;white-space:nowrap;
+  font-size:10.5px;font-weight:700;color:var(--dim);
+  background:var(--surface);border:1px solid var(--line);
+  border-radius:999px;padding:1px 7px;line-height:1.7;
+}
+.dg-cat .ic{font-size:10.5px;line-height:1}
+.dg-cat .n{font-size:9.5px;font-weight:800;color:var(--dim-2);font-variant-numeric:tabular-nums}
+@media(max-width:560px){
+  .dg-cats{order:5;flex-basis:100%}
+}
 
 /* 새로 추가된 앱 배지 */
 .new-badge{

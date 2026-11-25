@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1116">
+<title>2026-11-25 웹앱 3종 — 대출 상환 비교 계산기 · 타자 속도 챌린지 · 이미지 압축 변환기</title>
+<meta name="description" content="대출 상환 방식 비교 계산기, 한국어·영문 타자 속도 챌린지, 브라우저에서 끝나는 이미지 리사이즈·압축 변환기 — 설치 없이 바로 쓰는 웹앱 3종.">
+<style>
+  :root{--bg:#0d1117;--card:#151b23;--line:rgba(255,255,255,.09);--txt:#e6edf3;--dim:#8b98a5;
+    --a:#61a8ff;--v:#b19bff;--y:#ffb86b}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1000px 500px at 8% -10%,rgba(97,168,255,.13),transparent 60%),
+      radial-gradient(900px 480px at 100% 0%,rgba(177,155,255,.14),transparent 58%),
+      radial-gradient(800px 460px at 50% 110%,rgba(255,184,107,.09),transparent 60%),
+      linear-gradient(180deg,#0d1117,#0a0e13);
+    -webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:1000px;margin:0 auto;padding:34px 18px 66px}
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+  .back{text-decoration:none;color:var(--dim);font-size:12.5px;font-weight:700;
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
+  .back:hover{color:var(--txt);border-color:rgba(255,255,255,.24)}
+  .pf{text-decoration:none;font-size:12.5px;font-weight:800;color:#d7fbe8;
+    background:linear-gradient(120deg,rgba(94,233,166,.16),rgba(139,123,255,.18));
+    border:1px solid rgba(94,233,166,.34);border-radius:999px;padding:6px 13px}
+  h1{font-size:clamp(24px,5vw,34px);letter-spacing:-.9px;margin:0 0 6px}
+  .sub{color:var(--dim);font-size:14px;margin:0 0 26px}
+  .cards{display:grid;gap:14px}
+  @media(min-width:760px){.cards{grid-template-columns:repeat(3,1fr)}}
+  a.card{display:block;text-decoration:none;color:inherit;background:linear-gradient(180deg,#161d25,#131a21);
+    border:1px solid var(--line);border-radius:18px;padding:19px;
+    transition:transform .15s,border-color .15s,box-shadow .2s}
+  a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22);box-shadow:0 20px 40px -26px #000}
+  .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+  .card h2{margin:0 0 4px;font-size:17px;letter-spacing:-.3px}
+  .tagline{color:var(--dim);font-size:13px;margin:0 0 12px;min-height:2.6em}
+  .feat{list-style:none;padding:0;margin:0 0 14px;font-size:12.5px;color:#b6c2ce;display:grid;gap:5px}
+  .feat li:before{content:"✓";color:var(--a);margin-right:6px;font-weight:700}
+  .card.v .feat li:before{color:var(--v)}
+  .card.y .feat li:before{color:var(--y)}
+  .go{font-size:13px;font-weight:800;color:var(--a)}
+  .card.v .go{color:#c9bcff}
+  .card.y .go{color:var(--y)}
+  .note{margin-top:24px;font-size:12.5px;color:#6f7d8b;text-align:center;line-height:1.8}
+  .note code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="../../">← 전체 아카이브</a>
+    <a class="pf" href="../../portfolio/">✨ 포트폴리오</a>
+  </div>
+  <h1>오늘 만든 웹앱 3종</h1>
+  <p class="sub">2026-11-25 · 설치·로그인 없이 브라우저에서 바로 동작합니다. 모든 기록은 내 기기에만 저장됩니다.</p>
+  <div class="cards">
+    <a class="card" href="./loan-compare/index.html">
+      <div class="ico" style="background:rgba(97,168,255,.15)">🏦</div>
+      <h2>대출 상환 비교 계산기</h2>
+      <p class="tagline">원리금균등·원금균등·만기일시를 한 번에, 중도상환 효과까지</p>
+      <ul class="feat">
+        <li>세 가지 상환 방식의 월 납입액·총이자 비교</li>
+        <li>거치기간·중도상환 수수료 반영 재계산</li>
+        <li>연도별 상환 구성 차트 · 스케줄 CSV</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="card v" href="./type-race/index.html">
+      <div class="ico" style="background:rgba(177,155,255,.16)">📝</div>
+      <h2>타자 속도 챌린지</h2>
+      <p class="tagline">한국어·영문 문장으로 타수와 정확도 재기</p>
+      <ul class="feat">
+        <li>15·30·60초 모드, 실시간 CPM·정확도</li>
+        <li>틀린 글자 표시 · 콤보 없이 정확도 우선</li>
+        <li>최고 기록·최근 7회 기록 저장</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="card y" href="./img-resize/index.html">
+      <div class="ico" style="background:rgba(255,184,107,.16)">🖼️</div>
+      <h2>이미지 리사이즈·압축</h2>
+      <p class="tagline">Canvas로 브라우저 안에서만 줄이고 변환</p>
+      <ul class="feat">
+        <li>비율 유지 리사이즈 · 회전 · 프리셋</li>
+        <li>JPEG·PNG·WebP 변환과 품질 조절</li>
+        <li>원본 대비 용량 비교 · 바로 내려받기</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+  </div>
+  <p class="note">
+    순수 HTML/CSS/JS 단일 파일 · 외부 라이브러리·웹폰트 0개 · <code>localStorage</code>로만 저장<br>
+    앱 폴더: <code>loan-compare/</code> · <code>type-race/</code> · <code>img-resize/</code>
+  </p>
+</div>
+</body>
+</html>

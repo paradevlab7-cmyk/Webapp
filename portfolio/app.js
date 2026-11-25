@@ -333,11 +333,24 @@
 
     return order.map(function (d) {
       var arr = byDate[d];
+      // 그날 만든 앱의 카테고리 요약 (등장 순서 유지)
+      var seen = {}, cats = [];
+      arr.forEach(function (a) {
+        var id = a.category || '';
+        if (!seen[id]) { seen[id] = { c: catOf(id), n: 0 }; cats.push(seen[id]); }
+        seen[id].n++;
+      });
+      var catChips = cats.map(function (x) {
+        return '<span class="dg-cat" title="' + esc(x.c.label) + ' ' + x.n + '개">' +
+          '<span class="ic" aria-hidden="true">' + esc(x.c.icon || '•') + '</span>' +
+          esc(x.c.label) + '<span class="n" aria-hidden="true">' + x.n + '</span></span>';
+      }).join('');
       return '<section class="daygroup" data-date="' + esc(d) + '" aria-label="' + fmtDate(d) + ' · ' + arr.length + '개">' +
         '<div class="daygroup-head">' +
           '<span class="dg-date">' + fmtDate(d) + '</span>' +
           (d === state.latest ? '<span class="new-badge">NEW</span>' : '') +
           '<span class="dg-rel">' + relDays(d) + '</span>' +
+          '<span class="dg-cats">' + catChips + '</span>' +
           '<span class="dg-n">' + arr.length + '개</span>' +
         '</div>' +
         '<div class="daygroup-cards">' +
