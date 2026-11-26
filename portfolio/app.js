@@ -9,6 +9,7 @@
   var THEME_KEY = 'portfolio:theme:v1';
   var VIEW_KEY = 'portfolio:view:v1';
   var LAYOUT_KEY = 'portfolio:layout:v1';
+  var FOLD_KEY = 'portfolio:collapsed:v1';
 
   var $ = function (sel, root) { return (root || document).querySelector(sel); };
 
@@ -55,6 +56,7 @@
     group: loadView() === 'day',
     layout: loadLayout(),
     favs: loadFavs(),
+    collapsed: loadCollapsed(),
     lastFocus: null,
     openSlug: null
   };
@@ -77,6 +79,18 @@
   function saveView() {
     try { localStorage.setItem(VIEW_KEY, state.group ? 'day' : 'grid'); } catch (e) {}
   }
+
+  /* 접어 둔 날짜 그룹 (portfolio:collapsed:v1) */
+  function loadCollapsed() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(FOLD_KEY) || '[]');
+      return Array.isArray(raw) ? raw.filter(function (d) { return typeof d === 'string'; }) : [];
+    } catch (e) { return []; }
+  }
+  function saveCollapsed() {
+    try { localStorage.setItem(FOLD_KEY, JSON.stringify(state.collapsed)); } catch (e) {}
+  }
+  function isFolded(d) { return state.collapsed.indexOf(d) !== -1; }
 
   /* 리스트 / 그리드 보기 방식 (portfolio:layout:v1) */
   function loadLayout() {
@@ -345,15 +359,20 @@
           '<span class="ic" aria-hidden="true">' + esc(x.c.icon || '•') + '</span>' +
           esc(x.c.label) + '<span class="n" aria-hidden="true">' + x.n + '</span></span>';
       }).join('');
-      return '<section class="daygroup" data-date="' + esc(d) + '" aria-label="' + fmtDate(d) + ' · ' + arr.length + '개">' +
-        '<div class="daygroup-head">' +
+      var folded = isFolded(d);
+      var gid = 'dgc-' + d.replace(/[^0-9]/g, '');
+      return '<section class="daygroup' + (folded ? ' folded' : '') + '" data-date="' + esc(d) + '" aria-label="' + fmtDate(d) + ' · ' + arr.length + '개">' +
+        '<button class="daygroup-head" type="button" data-day="' + esc(d) + '"' +
+          ' aria-expanded="' + (folded ? 'false' : 'true') + '" aria-controls="' + gid + '"' +
+          ' title="' + fmtDate(d) + ' 그룹 접기/펼치기">' +
+          '<span class="dg-chev" aria-hidden="true">⌄</span>' +
           '<span class="dg-date">' + fmtDate(d) + '</span>' +
           (d === state.latest ? '<span class="new-badge">NEW</span>' : '') +
           '<span class="dg-rel">' + relDays(d) + '</span>' +
           '<span class="dg-cats">' + catChips + '</span>' +
           '<span class="dg-n">' + arr.length + '개</span>' +
-        '</div>' +
-        '<div class="daygroup-cards">' +
+        '</button>' +
+        '<div class="daygroup-cards" id="' + gid + '"' + (folded ? ' hidden' : '') + '>' +
           arr.map(function (a) { return cardHtml(a, list.indexOf(a), toks); }).join('') +
         '</div>' +
       '</section>';
@@ -395,6 +414,27 @@
 
     // 모달이 열린 앱이 필터에서 사라졌다면 닫는다
     if (state.openSlug && !list.some(function (a) { return a.slug === state.openSlug; })) closeModal(true);
+  }
+
+  /* ------------------------------ 날짜 그룹 접기/펼치기 ------------------------------ */
+  function toggleGroup(day) {
+    var sec = el.grid.querySelector('.daygroup[data-date="' + day + '"]');
+    if (!sec) return;
+    var i = state.collapsed.indexOf(day);
+    var open;
+    if (i === -1) { state.collapsed.push(day); open = false; }
+    else { state.collapsed.splice(i, 1); open = true; }
+    saveCollapsed();
+
+    var head = sec.querySelector('.daygroup-head');
+    var cards = sec.querySelector('.daygroup-cards');
+    sec.classList.toggle('folded', !open);
+    if (head) head.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (cards) {
+      if (open) cards.removeAttribute('hidden');
+      else cards.setAttribute('hidden', '');
+    }
+    toast(open ? fmtDate(day) + ' 그룹을 펼쳤어요' : fmtDate(day) + ' 그룹을 접었어요');
   }
 
   /* ------------------------------ 모달 ------------------------------ */
@@ -581,6 +621,12 @@
   });
 
   el.grid.addEventListener('click', function (e) {
+    var head = e.target.closest('.daygroup-head');
+    if (head) {
+      e.preventDefault();
+      toggleGroup(head.getAttribute('data-day'));
+      return;
+    }
     var favBtn = e.target.closest('.fav');
     if (favBtn) {
       e.stopPropagation();

@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d1014">
+<title>전기요금 누진제 계산기 — 주택용 저압 요금 명세와 절약 효과</title>
+<meta name="description" content="이번 달 사용량(kWh)을 넣으면 주택용 저압 누진요금의 기본요금·전력량요금·기후환경요금·연료비조정액·부가세·기금까지 명세로 계산합니다. 절약 시뮬레이션과 가전 사용량 합산도 한 화면에서.">
+<style>
+  [hidden]{display:none!important}
+  :root{
+    --bg:#0d1014;--card:#151a20;--card2:#11161b;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.17);
+    --txt:#e8eef4;--dim:#93a1ae;--dim2:#6d7b88;
+    --a:#ffd166;--a-ink:#2a1f00;--b:#7cc4ff;--g:#5ee9a6;--warn:#ff9f6b;--neg:#ff8b8b;
+  }
+  *{box-sizing:border-box}
+  html,body{max-width:100%}
+  body{margin:0;min-height:100vh;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(900px 460px at 8% -10%,rgba(255,209,102,.12),transparent 62%),
+      radial-gradient(820px 440px at 100% 0%,rgba(124,196,255,.13),transparent 60%),
+      linear-gradient(180deg,#0d1014,#090c10);
+    -webkit-font-smoothing:antialiased;line-height:1.55}
+  .wrap{max-width:1080px;margin:0 auto;padding:26px 16px 64px}
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+  .back{text-decoration:none;color:var(--dim);font-size:12.5px;font-weight:700;border:1px solid var(--line);
+    border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
+  .back:hover{color:var(--txt);border-color:var(--line2)}
+  .pill{font-size:11.5px;color:var(--dim2);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+  header h1{font-size:clamp(23px,5vw,32px);letter-spacing:-.9px;margin:0 0 6px}
+  header .sub{margin:0 0 22px;color:var(--dim);font-size:13.5px;max-width:66ch}
+
+  .layout{display:grid;gap:14px;grid-template-columns:minmax(0,1fr)}
+  .layout>*{min-width:0}
+  @media(min-width:920px){.layout{grid-template-columns:minmax(300px,362px) minmax(0,1fr);align-items:start}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;min-width:0}
+  .panel+.panel{margin-top:14px}
+  .phead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 13px;flex-wrap:wrap}
+  .phead h2{margin:0;font-size:13px;letter-spacing:.02em;color:#c6d2dd;font-weight:800}
+  .phead .hint{font-size:11.5px;color:var(--dim2);min-width:0;overflow-wrap:anywhere}
+
+  /* ---------- form ---------- */
+  .field{margin-bottom:14px}
+  .field:last-child{margin-bottom:0}
+  .field>label,.flab{display:block;font-size:12px;color:var(--dim);font-weight:700;margin-bottom:6px}
+  .inrow{display:flex;align-items:stretch;gap:8px}
+  input[type=number],input[type=text],select{width:100%;min-width:0;background:#0b1015;color:var(--txt);
+    border:1px solid var(--line2);border-radius:10px;padding:10px 12px;font:inherit;font-size:15px;font-weight:800;
+    letter-spacing:-.2px;-webkit-appearance:none;appearance:none;font-variant-numeric:tabular-nums}
+  select{font-size:13px;font-weight:700;padding-right:30px;
+    background-image:linear-gradient(45deg,transparent 50%,#93a1ae 50%),linear-gradient(135deg,#93a1ae 50%,transparent 50%);
+    background-position:calc(100% - 15px) 52%,calc(100% - 10px) 52%;background-size:5px 5px,5px 5px;background-repeat:no-repeat}
+  input:focus,select:focus,button:focus-visible,textarea:focus{outline:2px solid rgba(255,209,102,.65);outline-offset:1px;border-color:rgba(255,209,102,.55)}
+  .unit{display:grid;place-items:center;flex:0 0 auto;padding:0 11px;border:1px solid var(--line2);border-radius:10px;
+    background:rgba(255,255,255,.04);color:var(--dim);font-size:12px;font-weight:800;white-space:nowrap}
+  .qbtn{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#b6c2ce;
+    font:inherit;font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:999px;cursor:pointer}
+  .qbtn:hover{color:var(--txt);border-color:var(--line2);background:rgba(255,255,255,.07)}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+  .seg{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;background:rgba(255,255,255,.04);
+    border:1px solid var(--line);border-radius:12px;padding:4px}
+  .seg button{appearance:none;border:0;background:transparent;color:var(--dim);font:inherit;font-size:12px;font-weight:800;
+    padding:8px 3px;border-radius:9px;cursor:pointer;line-height:1.25;letter-spacing:-.3px}
+  .seg button b{display:block;font-size:10.5px;font-weight:700;color:var(--dim2);letter-spacing:0;margin-top:1px}
+  .seg button[aria-pressed=true]{background:rgba(255,209,102,.16);color:#fff6dc;box-shadow:inset 0 0 0 1px rgba(255,209,102,.42)}
+  .seg button[aria-pressed=true] b{color:#ffe7a3}
+  input[type=range]{width:100%;margin:12px 0 0;accent-color:#ffd166;height:22px}
+  .scale{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim2);font-variant-numeric:tabular-nums;margin-top:-2px}
+  .btns{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:14px}
+  .btn{appearance:none;border:1px solid transparent;border-radius:11px;padding:11px 14px;font:inherit;font-size:13.5px;
+    font-weight:800;cursor:pointer;letter-spacing:-.3px}
+  .btn.pri{background:linear-gradient(120deg,#ffd166,#f0b429);color:#2a1f00;box-shadow:0 12px 26px -18px #ffd166}
+  .btn.pri:hover{filter:brightness(1.05)}
+  .btn.ghost{background:rgba(255,255,255,.04);border-color:var(--line2);color:#c9d4de}
+  .btn.ghost:hover{background:rgba(255,255,255,.08);color:#fff}
+  .btn.sm{padding:7px 11px;font-size:12px;border-radius:9px}
+  .notice{margin-top:10px;font-size:11.5px;color:var(--dim2);line-height:1.55}
+  .notice b{color:var(--warn)}
+
+  /* ---------- result ---------- */
+  .total{background:linear-gradient(160deg,rgba(255,209,102,.14),rgba(255,209,102,.04));
+    border:1px solid rgba(255,209,102,.32);border-radius:16px;padding:16px 16px 14px}
+  .total .k{font-size:11.5px;font-weight:800;letter-spacing:.06em;color:#ffdd8a;text-transform:uppercase}
+  .total .v{font-size:clamp(30px,7.4vw,42px);font-weight:900;letter-spacing:-1.4px;line-height:1.12;margin-top:2px;
+    font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .total .v small{font-size:16px;font-weight:800;letter-spacing:0;color:#ffe9b0}
+  .total .s{font-size:12px;color:#c8b78a;margin-top:5px}
+  .total .s b{color:#ffdd8a}
+  .kpis{display:grid;gap:9px;grid-template-columns:1fr 1fr;margin-top:12px}
+  @media(min-width:620px){.kpis{grid-template-columns:repeat(4,1fr)}}
+  .kpi{background:var(--card2);border:1px solid var(--line);border-radius:13px;padding:11px 12px;min-width:0}
+  .kpi .k{font-size:11px;color:var(--dim2);font-weight:700;margin-bottom:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi .v{font-size:clamp(15px,3.2vw,18px);font-weight:900;letter-spacing:-.5px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .kpi .s{font-size:10.5px;color:var(--dim);margin-top:2px}
+
+  /* ---------- tier gauge ---------- */
+  .gauge{margin-top:6px}
+  .gbar{position:relative;height:16px;border-radius:8px;background:#0b1015;border:1px solid var(--line);
+    overflow:hidden;display:flex}
+  .gbar i{display:block;height:100%;border-right:1px solid rgba(0,0,0,.45)}
+  .gbar i:last-child{border-right:0}
+  .gbar i.t1{background:rgba(94,233,166,.34)}
+  .gbar i.t2{background:rgba(255,209,102,.34)}
+  .gbar i.t3{background:rgba(255,139,139,.34)}
+  .gbar .fill{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(94,233,166,.55),rgba(255,209,102,.6));
+    border-radius:8px 0 0 8px;transition:width .18s ease}
+  .gbar .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:#fff;box-shadow:0 0 8px rgba(255,255,255,.7);
+    transition:left .18s ease}
+  .glegend{display:flex;justify-content:space-between;font-size:10.5px;color:var(--dim2);margin-top:6px;font-variant-numeric:tabular-nums}
+  .glegend b{color:#c6d2dd}
+  .tblwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -2px;padding:0 2px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums}
+  th,td{padding:8px 7px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+  th{font-size:11px;color:var(--dim2);font-weight:800;letter-spacing:.01em}
+  th:first-child,td:first-child{text-align:left;white-space:normal}
+  tbody tr:last-child td{border-bottom:0}
+  tr.on td{background:rgba(255,209,102,.08)}
+  tr.on td:first-child{box-shadow:inset 3px 0 0 var(--a)}
+  .tag{display:inline-block;font-size:10px;font-weight:800;border-radius:6px;padding:0 5px;margin-left:5px;
+    background:rgba(255,209,102,.18);color:#ffe7a3;vertical-align:1px}
+
+  /* ---------- breakdown ---------- */
+  .kv{display:grid;grid-template-columns:1fr auto;gap:7px 12px;font-size:12.5px;margin:0;padding:0}
+  .kv dt{color:var(--dim);min-width:0}
+  .kv dt small{display:block;font-size:10.5px;color:var(--dim2);font-weight:600}
+  .kv dd{margin:0;font-weight:800;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+  .kv .sum dt,.kv .sum dd{border-top:1px solid var(--line);padding-top:9px;margin-top:2px;color:#eef4fa}
+  .kv .sum dd{font-size:14px}
+  .kv .tot dd{color:var(--a);font-size:15px}
+
+  /* ---------- savings ---------- */
+  .saves{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+  @media(min-width:560px){.saves{grid-template-columns:repeat(4,1fr)}}
+  .save{background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 11px;min-width:0}
+  .save .k{font-size:11px;color:var(--dim2);font-weight:800}
+  .save .v{font-size:15px;font-weight:900;color:var(--g);letter-spacing:-.4px;margin-top:2px;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+  .save .s{font-size:10.5px;color:var(--dim);margin-top:1px}
+
+  /* ---------- appliances ---------- */
+  .aprow{display:grid;grid-template-columns:minmax(0,1fr) 62px 50px 56px;gap:6px;align-items:center;margin-bottom:7px}
+  .aprow .nm{font-size:12px;color:#c6d2dd;font-weight:700;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .aprow input{padding:7px 8px;font-size:12.5px;text-align:right}
+  .aphead{display:grid;grid-template-columns:minmax(0,1fr) 62px 50px 56px;gap:6px;font-size:10.5px;color:var(--dim2);
+    font-weight:800;margin-bottom:5px;text-align:right}
+  .aphead span:first-child{text-align:left}
+  .aptotal{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+    margin-top:10px;padding-top:10px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim)}
+  .aptotal b{color:var(--a);font-size:15px;font-variant-numeric:tabular-nums}
+
+  /* ---------- rate editor ---------- */
+  details.editor{margin-top:4px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.02)}
+  details.editor summary{cursor:pointer;padding:10px 12px;font-size:12px;font-weight:800;color:#c6d2dd;list-style:none}
+  details.editor summary::-webkit-details-marker{display:none}
+  details.editor summary:before{content:"▸";display:inline-block;margin-right:7px;color:var(--dim2);transition:transform .15s}
+  details.editor[open] summary:before{transform:rotate(90deg)}
+  .edbody{padding:2px 12px 12px;display:grid;gap:9px;grid-template-columns:1fr 1fr}
+  @media(min-width:620px){.edbody{grid-template-columns:repeat(3,1fr)}}
+  .edf label{display:block;font-size:10.5px;color:var(--dim2);font-weight:800;margin-bottom:3px}
+  .edf input{padding:7px 8px;font-size:12.5px;text-align:right}
+  .ednote{grid-column:1/-1;font-size:11px;color:var(--dim2);line-height:1.5;margin:2px 0 0}
+  .foot{margin-top:22px;font-size:11.5px;color:var(--dim2);text-align:center;line-height:1.8}
+
+  /* ---------- toast ---------- */
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);
+    background:#232b33;color:#fff;border:1px solid var(--line2);border-radius:999px;padding:10px 18px;
+    font-size:12.5px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;
+    box-shadow:0 18px 40px -20px #000;max-width:calc(100% - 28px);text-align:center}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="../index.html">← 2026-11-26 목록</a>
+    <span class="pill">주택용 저압 · 누진 3단계</span>
+  </div>
+
+  <header>
+    <h1>전기요금 누진제 계산기</h1>
+    <p class="sub">이번 달 사용량을 넣으면 기본요금·전력량요금·기후환경요금·연료비조정액·부가세·기금까지 명세로 나눠 보여 줍니다. 구간을 넘는 순간 얼마가 뛰는지, 절약하면 얼마가 줄어드는지도 함께 계산합니다.</p>
+  </header>
+
+  <div class="layout">
+    <!-- ============ 입력 ============ -->
+    <div>
+      <section class="panel" aria-label="사용량 입력">
+        <div class="phead"><h2>① 사용량</h2><span class="hint">한 달 합계</span></div>
+        <div class="field">
+          <label for="usage">이번 달 사용량</label>
+          <div class="inrow">
+            <input id="usage" type="number" inputmode="numeric" min="0" max="5000" step="1" value="350" aria-describedby="usageHint">
+            <span class="unit">kWh</span>
+          </div>
+          <input id="usageRange" type="range" min="0" max="1000" step="1" value="350" aria-label="사용량 슬라이더">
+          <div class="scale"><span>0</span><span>200</span><span>400</span><span>700</span><span>1,000+</span></div>
+          <div class="chips" id="usagePresets">
+            <button class="qbtn" type="button" data-u="180">180</button>
+            <button class="qbtn" type="button" data-u="250">250</button>
+            <button class="qbtn" type="button" data-u="350">350</button>
+            <button class="qbtn" type="button" data-u="450">450</button>
+            <button class="qbtn" type="button" data-u="600">600</button>
+            <button class="qbtn" type="button" data-u="850">850</button>
+          </div>
+          <p class="notice" id="usageHint"></p>
+        </div>
+        <div class="field">
+          <span class="flab" id="seasonLab">② 계절 (슈퍼유저 요금)</span>
+          <div class="seg" id="season" role="group" aria-labelledby="seasonLab">
+            <button type="button" data-season="other" aria-pressed="true">봄·가을<b>3~6 · 9~11월</b></button>
+            <button type="button" data-season="summer" aria-pressed="false">여름<b>7~8월</b></button>
+            <button type="button" data-season="winter" aria-pressed="false">겨울<b>12~2월</b></button>
+          </div>
+          <p class="notice" id="seasonHint">1,000kWh를 넘으면 넘은 양에 슈퍼유저 요금이 따로 붙습니다.</p>
+        </div>
+        <div class="btns">
+          <button class="btn pri" id="calcBtn" type="button">요금 계산하기</button>
+          <button class="btn ghost" id="copyBtn" type="button">결과 복사</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="가전 사용량 도우미">
+        <div class="phead"><h2>③ 가전 사용량 합산</h2><span class="hint">W × 시간 × 일수</span></div>
+        <div class="aphead"><span>가전</span><span>W</span><span>시간</span><span>일/월</span></div>
+        <div id="apList"></div>
+        <div class="aptotal">
+          <span>월 합계 <b id="apTotal">0</b> kWh</span>
+          <button class="btn ghost sm" id="apApply" type="button">이 값을 사용량에 넣기</button>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="요금표">
+        <div class="phead"><h2>④ 요금표</h2><span class="hint">바꾸면 바로 다시 계산</span></div>
+        <details class="editor" id="rateEditor">
+          <summary>요금 단가 직접 수정</summary>
+          <div class="edbody" id="edBody"></div>
+        </details>
+        <p class="notice" style="margin-top:10px">
+          기본값은 <b>주택용 저압(누진 3단계)</b> 기준입니다. 실제 고지서와는 원 단위 반올림·복지할인·연료비조정 주기 때문에 몇 원 차이가 날 수 있습니다.
+        </p>
+      </section>
+    </div>
+
+    <!-- ============ 결과 ============ -->
+    <div>
+      <section class="panel" aria-label="계산 결과">
+        <div class="total">
+          <div class="k">예상 청구금액</div>
+          <div class="v" id="rTotal">–</div>
+          <div class="s" id="rTotalSub">–</div>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="k">적용 구간</div><div class="v" id="rTier">–</div><div class="s" id="rTierSub">–</div></div>
+          <div class="kpi"><div class="k">1kWh당</div><div class="v" id="rUnit">–</div><div class="s">평균 단가 (부가세 포함)</div></div>
+          <div class="kpi"><div class="k">하루 평균</div><div class="v" id="rDaily">–</div><div class="s" id="rDailySub">30일 기준</div></div>
+          <div class="kpi"><div class="k">1kWh 더 쓰면</div><div class="v" id="rNext">–</div><div class="s" id="rNextSub">전체 금액 증가분</div></div>
+        </div>
+      </section>
+
+      <section class="panel" aria-label="누진 구간">
+        <div class="phead"><h2>누진 구간</h2><span class="hint" id="gaugeHint">–</span></div>
+        <div class="gauge">
+          <div class="gbar" id="gBar">
+            <i class="t1" style="width:33.33%"></i><i class="t2" style="width:33.33%"></i><i class="t3" style="width:33.34%"></i>
+            <span class="fill" id="gFill" style="width:0%"></span>
+            <span class="mk" id="gMk" style="left:0%"></span>
+          </div>
+          <div class="glegend">
+            <span>1구간 ~200 <b id="gT1">–</b></span>
+            <span>2구간 201~400 <b id="gT2">–</b></span>
+            <span>3구간 401+ <b id="gT3">–</b></span>
+          </div>
+        </div>
+        <div class="tblwrap" style="margin-top:12px">
+          <table>
+            <thead><tr><th>구간</th><th>기본요금</th><th>전력량요금</th><th>이 구간 총액</th></tr></thead>
+            <tbody id="tierRows"></tbody>
+          </table>
+        </div>
+        <p class="notice">누진제는 사용량을 잘라서 각각 다른 단가를 매기는 방식이 아니라, <b>한 달 사용량 전체에 그 구간의 단가</b>를 적용합니다. 1kWh 차이로 구간이 바뀌면 금액이 크게 뛰는 이유입니다.</p>
+      </section>
+
+      <section class="panel" aria-label="요금 명세">
+        <div class="phead"><h2>요금 명세</h2><span class="hint" id="billMonth">–</span></div>
+        <dl class="kv" id="billKv">
+          <div class="sum" style="display:contents"><dt>청구금액 합계</dt><dd id="rSum">–</dd></div>
+        </dl>
+      </section>
+
+      <section class="panel" aria-label="절약 시뮬레이션">
+        <div class="phead"><h2>절약하면 얼마나 줄까</h2><span class="hint">현재 사용량 기준</span></div>
+        <div class="saves" id="saveList"></div>
+        <p class="notice" id="saveHint"></p>
+      </section>
+    </div>
+  </div>
+
+  <p class="foot">
+    순수 HTML/CSS/JS 단일 파일 · 외부 라이브러리·웹폰트 0개 · 입력값은 <code>localStorage</code>에만 저장<br>
+    계산 결과는 참고용입니다. 실제 청구액은 한전 고지서를 확인하세요.
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'powerbill:v1';
+
+  var DEFAULT = {
+    tiers: [
+      { upTo: 200, base: 910, energy: 120.0 },
+      { upTo: 400, base: 1600, energy: 214.6 },
+      { upTo: null, base: 7300, energy: 307.3 }
+    ],
+    climate: 9.0,      // 기후환경요금 원/kWh
+    fuel: 5.0,         // 연료비조정액 원/kWh
+    vat: 10,           // 부가가치세 %
+    fund: 3.7,         // 전력산업기반기금 % (2,000원 미만 2.0%)
+    fundLow: 2.0,
+    fundLimit: 2000,
+    superKwh: 1000,    // 슈퍼유저 기준
+    superRate: 736.6   // 슈퍼유저 단가
+  };
+
+  var APPS = [
+    { id: 'ac',     name: '에어컨(인버터)', w: 800,  h: 6,  d: 30 },
+    { id: 'fridge', name: '냉장고',         w: 100,  h: 24, d: 30 },
+    { id: 'tv',     name: 'TV',             w: 120,  h: 4,  d: 30 },
+    { id: 'fan',    name: '선풍기',         w: 45,   h: 8,  d: 30 },
+    { id: 'washer', name: '세탁기',         w: 500,  h: 1,  d: 12 },
+    { id: 'dryer',  name: '전기 건조기',    w: 2000, h: 1,  d: 8  }
+  ];
+
+  var state = {
+    usage: 350,
+    season: 'other',
+    rates: JSON.parse(JSON.stringify(DEFAULT)),
+    apps: APPS.map(function (a) { return { id: a.id, w: a.w, h: a.h, d: a.d }; })
+  };
+  var last = null;
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+
+  /* ---------------- 숫자 ---------------- */
+  function n(v) {
+    var x = Number(v);
+    return isFinite(x) ? x : 0;
+  }
+  function fmt(v) {
+    var x = Math.round(n(v));
+    return x.toLocaleString('ko-KR');
+  }
+  function fmt1(v) {
+    var x = n(v);
+    return (Math.round(x * 10) / 10).toLocaleString('ko-KR', { minimumFractionDigits: 0, maximumFractionDigits: 1 });
+  }
+
+  /* ---------------- 계산 ---------------- */
+  function tierOf(u, tiers) {
+    for (var i = 0; i < tiers.length; i++) {
+      var t = tiers[i];
+      if (t.upTo == null || u <= t.upTo) return i;
+    }
+    return tiers.length - 1;
+  }
+
+  function calc(u, season, rates) {
+    rates = rates || state.rates;
+    u = Math.max(0, n(u));
+    var tiers = rates.tiers;
+    var ti = tierOf(u, tiers);
+    var t = tiers[ti];
+
+    var energyRaw = u * t.energy;
+    var superRaw = 0;
+    if (season !== 'other' && u > rates.superKwh) {
+      superRaw = (u - rates.superKwh) * (rates.superRate - t.energy);
+    }
+    var climateRaw = u * rates.climate;
+    var fuelRaw = u * rates.fuel;
+    var subRaw = t.base + energyRaw + climateRaw + fuelRaw + superRaw;
+
+    var sub = Math.round(subRaw);
+    var vat = Math.round(sub * rates.vat / 100);
+    var fundRate = sub < rates.fundLimit ? rates.fundLow / 100 : rates.fund / 100;
+    var fund = Math.round(sub * fundRate);
+    var total = sub + vat + fund;
+
+    return {
+      usage: u, season: season, tier: ti + 1, tierIndex: ti,
+      base: Math.round(t.base), energy: Math.round(energyRaw),
+      climate: Math.round(climateRaw), fuel: Math.round(fuelRaw),
+      sup: Math.round(superRaw),
+      sub: sub, vat: vat, fund: fund, fundPct: fundRate * 100, total: total,
+      energyRate: t.energy, baseRate: t.base,
+      perKwh: u > 0 ? total / u : 0,
+      daily: u / 30
+    };
+  }
+
+  /* ---------------- 요금표 편집 폼 ---------------- */
+  var ED = [
+    { k: 't1base', label: '1구간 기본요금', get: function (r) { return r.tiers[0].base; }, set: function (r, v) { r.tiers[0].base = v; } },
+    { k: 't1energy', label: '1구간 단가(원/kWh)', get: function (r) { return r.tiers[0].energy; }, set: function (r, v) { r.tiers[0].energy = v; } },
+    { k: 't2base', label: '2구간 기본요금', get: function (r) { return r.tiers[1].base; }, set: function (r, v) { r.tiers[1].base = v; } },
+    { k: 't2energy', label: '2구간 단가(원/kWh)', get: function (r) { return r.tiers[1].energy; }, set: function (r, v) { r.tiers[1].energy = v; } },
+    { k: 't3base', label: '3구간 기본요금', get: function (r) { return r.tiers[2].base; }, set: function (r, v) { r.tiers[2].base = v; } },
+    { k: 't3energy', label: '3구간 단가(원/kWh)', get: function (r) { return r.tiers[2].energy; }, set: function (r, v) { r.tiers[2].energy = v; } },
+    { k: 'climate', label: '기후환경요금(원/kWh)', get: function (r) { return r.climate; }, set: function (r, v) { r.climate = v; } },
+    { k: 'fuel', label: '연료비조정액(원/kWh)', get: function (r) { return r.fuel; }, set: function (r, v) { r.fuel = v; } },
+    { k: 'superKwh', label: '슈퍼유저 기준(kWh)', get: function (r) { return r.superKwh; }, set: function (r, v) { r.superKwh = v; } },
+    { k: 'superRate', label: '슈퍼유저 단가(원/kWh)', get: function (r) { return r.superRate; }, set: function (r, v) { r.superRate = v; } },
+    { k: 'vat', label: '부가세(%)', get: function (r) { return r.vat; }, set: function (r, v) { r.vat = v; } },
+    { k: 'fund', label: '기반기금(%)', get: function (r) { return r.fund; }, set: function (r, v) { r.fund = v; } }
+  ];
+
+  function buildEditor() {
+    var box = $('#edBody');
+    box.innerHTML = ED.map(function (e) {
+      return '<div class="edf"><label for="ed-' + e.k + '">' + e.label + '</label>' +
+        '<input id="ed-' + e.k + '" type="number" step="0.1" data-ed="' + e.k + '"></div>';
+    }).join('') + '<p class="ednote">단가를 바꾸면 바로 다시 계산되고 이 브라우저에 저장됩니다. (예: 2024~2025년 주택용 저압 기준)</p>';
+    box.addEventListener('input', function (ev) {
+      var inp = ev.target.closest('input[data-ed]');
+      if (!inp) return;
+      var k = inp.getAttribute('data-ed');
+      var v = n(inp.value);
+      for (var i = 0; i < ED.length; i++) if (ED[i].k === k) ED[i].set(state.rates, v);
+      save(); render();
+    });
+    var note = document.createElement('div');
+    note.style.cssText = 'grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap';
+    note.innerHTML = '<button class="btn ghost sm" type="button" id="restoreRates">기본 요금표로 되돌리기</button>';
+    box.appendChild(note);
+    $('#restoreRates').addEventListener('click', function () {
+      state.rates = JSON.parse(JSON.stringify(DEFAULT));
+      syncEditor(); save(); render(); toast('기본 요금표로 되돌렸어요');
+    });
+  }
+  function syncEditor() {
+    ED.forEach(function (e) {
+      var inp = document.getElementById('ed-' + e.k);
+      if (inp) inp.value = e.get(state.rates);
+    });
+  }
+
+  /* ---------------- 가전 ---------------- */
+  function buildApps() {
+    var box = $('#apList');
+    box.innerHTML = state.apps.map(function (a, i) {
+      var meta = APPS[i];
+      return '<div class="aprow" data-ap="' + meta.id + '">' +
+        '<span class="nm">' + meta.name + '</span>' +
+        '<input type="number" min="0" step="10" data-f="w" aria-label="' + meta.name + ' 소비전력" value="' + a.w + '">' +
+        '<input type="number" min="0" max="24" step="0.5" data-f="h" aria-label="' + meta.name + ' 하루 시간" value="' + a.h + '">' +
+        '<input type="number" min="0" max="31" step="1" data-f="d" aria-label="' + meta.name + ' 월 사용일수" value="' + a.d + '">' +
+        '</div>';
+    }).join('');
+    box.addEventListener('input', function (ev) {
+      var inp = ev.target.closest('input[data-f]');
+      if (!inp) return;
+      var row = inp.closest('.aprow');
+      var i = Array.prototype.indexOf.call(box.children, row);
+      var f = inp.getAttribute('data-f');
+      if (!state.apps[i]) return;
+      state.apps[i][f] = Math.max(0, n(inp.value));
+      save(); renderApps();
+    });
+  }
+  function apTotal() {
+    return state.apps.reduce(function (s, a) {
+      return s + Math.max(0, n(a.w)) * Math.max(0, n(a.h)) * Math.max(0, n(a.d)) / 1000;
+    }, 0);
+  }
+  function renderApps() {
+    var t = apTotal();
+    $('#apTotal').textContent = (Math.round(t * 10) / 10).toLocaleString('ko-KR', { maximumFractionDigits: 1 });
+  }
+
+  /* ---------------- 렌더 ---------------- */
+  function render() {
+    var u = state.usage;
+    var r = calc(u, state.season);
+    last = r;
+
+    $('#rTotal').innerHTML = fmt(r.total) + '<small> 원</small>';
+    $('#rTotalSub').innerHTML = '사용량 <b>' + fmt(u) + ' kWh</b> · ' + (state.season === 'other' ? '봄·가을 요금' :
+      state.season === 'summer' ? '여름(슈퍼유저) 요금' : '겨울(슈퍼유저) 요금');
+
+    $('#rTier').textContent = r.tier + '구간';
+    $('#rTierSub').textContent = '기본 ' + fmt(r.baseRate) + '원 · ' + fmt1(r.energyRate) + '원/kWh';
+    $('#rUnit').textContent = u > 0 ? fmt1(r.perKwh) + '원' : '–';
+    $('#rDaily').textContent = fmt(r.daily) + ' kWh';
+    $('#rDailySub').textContent = '30일 가정 · 하루 약 ' + fmt(r.total / 30) + '원';
+
+    var nxt = calc(u + 1, state.season).total - r.total;
+    var boundary = null;
+    if (u === 200) boundary = 200;
+    if (u === 400) boundary = 400;
+    if (state.season !== 'other' && u === state.rates.superKwh) boundary = state.rates.superKwh;
+    $('#rNext').textContent = '+' + fmt(nxt) + '원';
+    $('#rNextSub').textContent = boundary ? '⚠ ' + boundary + 'kWh 구간 경계를 넘습니다'
+      : (state.season === 'other' ? '누진 구간 안에서는 일정' : '슈퍼유저 기준 아래');
+
+    // 게이지
+    var scale = Math.max(500, Math.ceil((u + 40) / 100) * 100);
+    var p1 = 200 / scale * 100, p2 = 200 / scale * 100, p3 = 100 - p1 - p2;
+    var bar = $('#gBar');
+    var b1 = bar.querySelector('.t1'), b2 = bar.querySelector('.t2'), b3 = bar.querySelector('.t3');
+    b1.style.width = p1 + '%'; b2.style.width = p2 + '%'; b3.style.width = p3 + '%';
+    var pos = Math.min(100, u / scale * 100);
+    $('#gFill').style.width = pos + '%';
+    $('#gMk').style.left = pos + '%';
+    $('#gaugeHint').textContent = fmt(u) + ' / ' + fmt(scale) + ' kWh';
+    $('#gT1').textContent = r.tier === 1 ? '적용 중' : '–';
+    $('#gT2').textContent = r.tier === 2 ? '적용 중' : '–';
+    $('#gT3').textContent = r.tier === 3 ? '적용 중' : '–';
+
+    // 구간 표
+    var rows = state.rates.tiers.map(function (t, i) {
+      var sub = i === 0 ? '~200' : i === 1 ? '201~400' : '401~';
+      var energy = t.energy;
+      var edge = i === 0 ? 200 : i === 1 ? 400 : 0;
+      var total = t.base + edge * energy + edge * state.rates.climate + edge * state.rates.fuel;
+      var totalTxt = i === 2 ? '∞ (상한 없음)' : fmt(total);
+      return '<tr' + (i === r.tierIndex ? ' class="on"' : '') + '>' +
+        '<td>' + sub + ' kWh' + (i === r.tierIndex ? '<span class="tag">적용</span>' : '') + '</td>' +
+        '<td>' + fmt(t.base) + '원</td>' +
+        '<td>' + fmt1(energy) + '원</td>' +
+        '<td>' + totalTxt + '</td></tr>';
+    }).join('');
+    $('#tierRows').innerHTML = rows;
+
+    // 명세
+    var sumRows = [
+      ['기본요금', r.base, '사용 구간 ' + r.tier + '구간'],
+      ['전력량요금', r.energy, fmt(u) + ' × ' + fmt1(r.energyRate) + '원'],
+      ['기후환경요금', r.climate, fmt(u) + ' × ' + fmt1(state.rates.climate) + '원'],
+      ['연료비조정액', r.fuel, fmt(u) + ' × ' + fmt1(state.rates.fuel) + '원']
+    ];
+    if (r.sup > 0) sumRows.push(['슈퍼유저요금', r.sup, '1,000kWh 초과분 × ' + fmt1(state.rates.superRate) + '원']);
+    var html = sumRows.map(function (x) {
+      return '<div style="display:contents"><dt>' + x[0] + '<small>' + x[2] + '</small></dt><dd>' + fmt(x[1]) + '원</dd></div>';
+    }).join('');
+    html += '<div class="sum" style="display:contents"><dt>청구금액 합계<small>위 항목의 합</small></dt><dd id="rSum">' +
+      fmt(r.sub) + '원</dd></div>';
+    html += '<div style="display:contents"><dt>부가가치세<small>' + state.rates.vat + '%</small></dt><dd>' + fmt(r.vat) + '원</dd></div>';
+    html += '<div style="display:contents"><dt>전력산업기반기금<small>' + fmt1(r.fundPct) + '%</small></dt><dd>' + fmt(r.fund) + '원</dd></div>';
+    html += '<div class="tot" style="display:contents"><dt>최종 청구금액</dt><dd>' + fmt(r.total) + '원</dd></div>';
+    $('#billKv').innerHTML = html;
+    $('#billMonth').textContent = new Date().getMonth() + 1 + '월분 기준';
+
+    // 절약
+    var cases = [
+      { k: '5% 절약', u: u * 0.95 },
+      { k: '10% 절약', u: u * 0.9 },
+      { k: '−50 kWh', u: u - 50 },
+      { k: '−100 kWh', u: u - 100 }
+    ];
+    $('#saveList').innerHTML = cases.map(function (c) {
+      var nu = Math.max(0, Math.round(c.u));
+      var nr = calc(nu, state.season);
+      var cut = r.total - nr.total;
+      return '<div class="save"><div class="k">' + c.k + '</div>' +
+        '<div class="v">' + (cut > 0 ? '−' + fmt(cut) + '원' : '0원') + '</div>' +
+        '<div class="s">' + fmt(nu) + ' kWh → ' + fmt(nr.total) + '원</div></div>';
+    }).join('');
+    var best = Math.max.apply(null, cases.map(function (c) { return r.total - calc(Math.max(0, Math.round(c.u)), state.season).total; }));
+    $('#saveHint').textContent = u > 400
+      ? '지금은 3구간입니다. 400kWh 아래로 내려가면 금액이 크게 떨어집니다 — 가장 큰 절약은 ' + fmt(best) + '원.'
+      : '사용량이 구간 경계에 가까울수록 1kWh의 값이 커집니다.';
+
+    syncSeason();
+    renderApps();
+  }
+
+  function syncSeason() {
+    var bs = document.querySelectorAll('#season button');
+    for (var i = 0; i < bs.length; i++) {
+      bs[i].setAttribute('aria-pressed', bs[i].getAttribute('data-season') === state.season ? 'true' : 'false');
+    }
+  }
+
+  /* ---------------- 저장 ---------------- */
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        usage: state.usage, season: state.season, rates: state.rates,
+        apps: state.apps
+      }));
+    } catch (e) {}
+  }
+  function load() {
+    var raw = null;
+    try { raw = localStorage.getItem(KEY); } catch (e) {}
+    if (!raw) return;
+    try {
+      var s = JSON.parse(raw);
+      if (s && isFinite(s.usage)) state.usage = Math.max(0, Number(s.usage));
+      if (s && (s.season === 'summer' || s.season === 'winter' || s.season === 'other')) state.season = s.season;
+      if (s && s.rates && Array.isArray(s.rates.tiers) && s.rates.tiers.length === 3) {
+        state.rates = s.rates;
+      }
+      if (s && Array.isArray(s.apps)) {
+        state.apps = APPS.map(function (a, i) {
+          var src = s.apps[i] || {};
+          return { id: a.id, w: n(src.w) || a.w, h: src.h == null ? a.h : n(src.h), d: src.d == null ? a.d : n(src.d) };
+        });
+      }
+    } catch (e) {}
+  }
+
+  /* ---------------- 토스트 ---------------- */
+  var tt = null;
+  function toast(msg) {
+    var el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(tt);
+    tt = setTimeout(function () { el.classList.remove('show'); }, 1900);
+  }
+
+  /* ---------------- 이벤트 ---------------- */
+  function setUsage(v) {
+    state.usage = Math.max(0, Math.round(n(v)));
+    $('#usage').value = state.usage;
+    $('#usageRange').value = Math.min(1000, state.usage);
+    save(); render();
+  }
+
+  $('#usage').addEventListener('input', function () {
+    setUsage(this.value);
+  });
+  $('#usageRange').addEventListener('input', function () {
+    setUsage(this.value);
+  });
+  $('#usagePresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-u]');
+    if (!b) return;
+    setUsage(b.getAttribute('data-u'));
+  });
+  $('#season').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-season]');
+    if (!b) return;
+    state.season = b.getAttribute('data-season');
+    save(); render();
+    toast(state.season === 'other' ? '봄·가을 요금' : state.season === 'summer' ? '여름 — 1,000kWh 초과분에 슈퍼유저 요금' : '겨울 — 1,000kWh 초과분에 슈퍼유저 요금');
+  });
+  $('#calcBtn').addEventListener('click', function () {
+    render();
+    this.textContent = '계산 완료 ✓';
+    var self = this;
+    setTimeout(function () { self.textContent = '요금 계산하기'; }, 900);
+  });
+  $('#copyBtn').addEventListener('click', function () {
+    var r = last || calc(state.usage, state.season);
+    var lines = [
+      '전기요금 예상 (' + (state.season === 'other' ? '봄·가을' : state.season === 'summer' ? '여름' : '겨울') + ')',
+      '사용량: ' + fmt(r.usage) + ' kWh (' + r.tier + '구간, ' + fmt1(r.energyRate) + '원/kWh)',
+      '기본요금 ' + fmt(r.base) + '원 + 전력량요금 ' + fmt(r.energy) + '원',
+      '기후환경 ' + fmt(r.climate) + '원 + 연료비조정 ' + fmt(r.fuel) + '원' + (r.sup ? ' + 슈퍼유저 ' + fmt(r.sup) + '원' : ''),
+      '합계 ' + fmt(r.sub) + '원 + 부가세 ' + fmt(r.vat) + '원 + 기금 ' + fmt(r.fund) + '원',
+      '= ' + fmt(r.total) + '원'
+    ].join('\n');
+    copyText(lines, '요금 명세를 복사했어요');
+  });
+  $('#apApply').addEventListener('click', function () {
+    var t = apTotal();
+    if (t <= 0) { toast('가전 소비전력과 시간을 먼저 넣어 주세요'); return; }
+    setUsage(Math.round(t));
+    toast('가전 합계 ' + Math.round(t) + ' kWh를 사용량에 넣었어요');
+  });
+
+  function copyText(text, okMsg) {
+    function ok() { toast(okMsg); }
+    function fail() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var done = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (done) ok(); else toast('복사에 실패했어요');
+      } catch (e) { toast('복사에 실패했어요'); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fail);
+    } else fail();
+  }
+
+  /* ---------------- 시작 ---------------- */
+  load();
+  buildEditor();
+  syncEditor();
+  buildApps();
+  $('#usage').value = state.usage;
+  $('#usageRange').value = Math.min(1000, state.usage);
+  render();
+
+  $('#usageHint').textContent = '지난달 고지서의 사용량을 그대로 넣어 보세요. 슬라이더로 조절해도 됩니다.';
+
+  window.PowerBill = {
+    state: function () { return JSON.parse(JSON.stringify(state)); },
+    result: function () { return last; },
+    calc: function (u, season) { return calc(u, season || state.season); },
+    defaults: function () { return JSON.parse(JSON.stringify(DEFAULT)); }
+  };
+})();
+</script>
+</body>
+</html>

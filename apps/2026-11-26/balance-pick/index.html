@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#100e18">
+<title>밸런스 성향 테스트 — 16문항으로 알아보는 나의 선택 취향</title>
+<meta name="description" content="둘 중 하나만 고르는 16개의 밸런스 질문으로 나의 선택 취향(함께/혼자 · 계획/즉흥 · 실속/플렉스 · 안정/도전)을 16가지 유형으로 알려 줍니다. 설치 없이 2분.">
+<style>
+  [hidden]{display:none!important}
+  :root{
+    --bg:#100e18;--card:#191527;--card2:#151122;--line:rgba(255,255,255,.09);--line2:rgba(255,255,255,.18);
+    --txt:#efeafd;--dim:#a49cc0;--dim2:#7c7596;
+    --a:#b79cff;--a2:#ff9ad5;--b:#7ce0ff;--g:#6ff0b8;--warn:#ffc46b;
+  }
+  *{box-sizing:border-box}
+  html,body{max-width:100%}
+  body{margin:0;min-height:100vh;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(880px 460px at 12% -12%,rgba(183,156,255,.18),transparent 62%),
+      radial-gradient(760px 420px at 100% 0%,rgba(255,154,213,.15),transparent 60%),
+      radial-gradient(700px 420px at 50% 110%,rgba(124,224,255,.1),transparent 62%),
+      linear-gradient(180deg,#100e18,#0a0812);
+    -webkit-font-smoothing:antialiased;line-height:1.55}
+  .wrap{max-width:720px;margin:0 auto;padding:26px 16px 60px}
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+  .back{text-decoration:none;color:var(--dim);font-size:12.5px;font-weight:700;border:1px solid var(--line);
+    border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
+  .back:hover{color:var(--txt);border-color:var(--line2)}
+  .pill{font-size:11.5px;color:var(--dim2);border:1px solid var(--line);border-radius:999px;padding:5px 12px}
+
+  .screen{animation:up .26s ease both}
+  @keyframes up{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @media(prefers-reduced-motion:reduce){.screen{animation:none}*{transition:none!important}}
+
+  /* ---------------- intro ---------------- */
+  .eyebrow{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:.14em;
+    text-transform:uppercase;color:#cbb8ff;margin:0 0 12px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--a);box-shadow:0 0 12px var(--a)}
+  h1{font-size:clamp(27px,6.4vw,40px);line-height:1.2;letter-spacing:-1.2px;margin:0 0 12px;font-weight:900}
+  h1 em{font-style:normal;background:linear-gradient(100deg,var(--a),var(--a2));-webkit-background-clip:text;
+    background-clip:text;color:transparent}
+  .lede{color:var(--dim);font-size:14px;margin:0 0 20px;max-width:52ch}
+  .facts{display:flex;gap:7px;flex-wrap:wrap;margin:0 0 22px}
+  .fact{font-size:11.5px;font-weight:800;color:#c9c0e6;background:rgba(255,255,255,.05);
+    border:1px solid var(--line);border-radius:999px;padding:5px 11px}
+  .fact b{color:var(--a)}
+  .start{appearance:none;width:100%;border:0;border-radius:14px;padding:16px 20px;font:inherit;font-size:16px;
+    font-weight:900;letter-spacing:-.4px;cursor:pointer;color:#1a1024;
+    background:linear-gradient(100deg,#c9b2ff,#ffa9dd 60%,#9be7ff);
+    box-shadow:0 18px 40px -22px #b79cff}
+  .start:hover{filter:brightness(1.05)}
+  .start:active{transform:translateY(1px)}
+  .start small{display:block;font-size:11.5px;font-weight:800;opacity:.72;letter-spacing:0;margin-top:2px}
+  .lastcard{margin-top:20px;border:1px solid var(--line);border-radius:14px;background:var(--card2);padding:13px 15px;
+    display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .lastcard .ic{font-size:24px;line-height:1}
+  .lastcard .tx{flex:1 1 150px;min-width:0}
+  .lastcard .k{font-size:11px;color:var(--dim2);font-weight:800;letter-spacing:.06em}
+  .lastcard .n{font-size:14px;font-weight:800;letter-spacing:-.3px}
+  .lastcard .d{font-size:11.5px;color:var(--dim)}
+  .lastcard button{appearance:none;border:1px solid var(--line2);background:rgba(255,255,255,.05);color:#ded7f5;
+    font:inherit;font-size:12px;font-weight:800;padding:8px 12px;border-radius:10px;cursor:pointer}
+  .lastcard button:hover{background:rgba(255,255,255,.1);color:#fff}
+  .collect{margin-top:16px;font-size:11.5px;color:var(--dim2);text-align:center}
+  .collect b{color:var(--a)}
+
+  /* ---------------- quiz ---------------- */
+  .qtop{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+  .qtop .n{font-size:12.5px;font-weight:900;color:#d9cfff;font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .qtop .n b{color:#fff;font-size:15px}
+  .qtop .pct{font-size:11.5px;color:var(--dim2);font-weight:800;font-variant-numeric:tabular-nums}
+  .pbar{height:6px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden;margin-bottom:22px}
+  .pbar i{display:block;height:100%;width:0;border-radius:99px;
+    background:linear-gradient(90deg,var(--a),var(--a2));transition:width .24s ease}
+  .qmeta{font-size:11.5px;font-weight:800;color:#a99ad6;letter-spacing:.08em;text-transform:uppercase;margin:0 0 8px}
+  .q{font-size:clamp(20px,4.6vw,26px);font-weight:900;letter-spacing:-.7px;line-height:1.35;margin:0 0 20px}
+  .opts{display:grid;gap:10px}
+  .opt{appearance:none;text-align:left;width:100%;border:1px solid var(--line2);border-radius:15px;
+    background:linear-gradient(160deg,#1c1830,#171226);color:var(--txt);font:inherit;cursor:pointer;
+    padding:15px 16px;display:flex;align-items:center;gap:13px;transition:transform .13s,border-color .13s,box-shadow .18s}
+  .opt:hover{transform:translateY(-2px);border-color:rgba(183,156,255,.6);box-shadow:0 18px 34px -26px #b79cff}
+  .opt:active{transform:none}
+  .opt .mk{flex:0 0 auto;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+    font-size:13px;font-weight:900;background:rgba(183,156,255,.18);color:#d9cfff;border:1px solid rgba(183,156,255,.32)}
+  .opt.b .mk{background:rgba(255,154,213,.16);color:#ffcbe9;border-color:rgba(255,154,213,.32)}
+  .opt .tx{font-size:14.5px;font-weight:800;letter-spacing:-.3px;line-height:1.4}
+  .opt.chosen{border-color:var(--a);box-shadow:0 0 0 2px rgba(183,156,255,.35)}
+  .qfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;flex-wrap:wrap}
+  .qfoot .kb{font-size:11px;color:var(--dim2)}
+  .qfoot .kb kbd{font:inherit;font-size:10.5px;font-weight:800;background:rgba(255,255,255,.08);
+    border:1px solid var(--line2);border-radius:5px;padding:1px 5px;margin:0 1px}
+  .qback{appearance:none;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--dim);
+    font:inherit;font-size:12px;font-weight:800;padding:7px 12px;border-radius:9px;cursor:pointer}
+  .qback:hover:not(:disabled){color:var(--txt);border-color:var(--line2)}
+  .qback:disabled{opacity:.4;cursor:default}
+  .qleft{display:flex;gap:6px;flex-wrap:wrap}
+
+  /* ---------------- result ---------------- */
+  .rcard{border:1px solid rgba(183,156,255,.34);border-radius:20px;padding:20px 18px;
+    background:linear-gradient(165deg,rgba(183,156,255,.16),rgba(255,154,213,.08) 55%,rgba(124,224,255,.07));
+    box-shadow:0 24px 60px -40px #b79cff}
+  .rcode{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}
+  .rcode span{font-size:11px;font-weight:900;letter-spacing:.1em;color:#e7ddff;background:rgba(0,0,0,.24);
+    border:1px solid rgba(255,255,255,.16);border-radius:7px;padding:3px 7px}
+  .rname{display:flex;align-items:flex-start;gap:12px;margin:0 0 10px}
+  .rname .ic{font-size:34px;line-height:1.1}
+  .rname h2{font-size:clamp(22px,5.4vw,30px);letter-spacing:-.9px;margin:0;line-height:1.25;font-weight:900}
+  .rname .sub{font-size:12px;color:#c3b7e6;font-weight:700;margin-top:3px}
+  .rdesc{font-size:13.5px;color:#ded6f6;margin:0 0 16px;line-height:1.7}
+
+  .axis{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:3px 9px;align-items:center;margin-bottom:11px}
+  .axis .lab{font-size:11.5px;font-weight:800;color:#cfc6ea;white-space:nowrap}
+  .axis .lab.r{text-align:right;color:#a9a0c6}
+  .axis .bar{position:relative;height:9px;border-radius:99px;background:rgba(0,0,0,.32);overflow:hidden;
+    border:1px solid rgba(255,255,255,.09)}
+  .axis .bar i{position:absolute;left:0;top:0;bottom:0;border-radius:99px;
+    background:linear-gradient(90deg,#b79cff,#ff9ad5);transition:width .5s ease}
+  .axis .val{grid-column:1/-1;font-size:10.5px;color:var(--dim2);display:flex;justify-content:space-between;margin-top:-3px}
+  .axis .val b{color:#ddd4f7}
+
+  .rbox{border:1px solid var(--line);border-radius:13px;background:rgba(0,0,0,.18);padding:12px 13px;margin-bottom:9px}
+  .rbox .k{font-size:11px;font-weight:900;letter-spacing:.06em;color:#bdaee6;margin-bottom:4px}
+  .rbox .v{font-size:12.5px;color:#e4dcf8;line-height:1.65}
+  .rrow{display:grid;gap:9px;grid-template-columns:1fr}
+  @media(min-width:560px){.rrow{grid-template-columns:1fr 1fr}}
+
+  .ractions{display:grid;grid-template-columns:1.4fr 1fr;gap:8px;margin-top:16px}
+  .btn{appearance:none;border:1px solid transparent;border-radius:12px;padding:12px 14px;font:inherit;font-size:13.5px;
+    font-weight:900;cursor:pointer;letter-spacing:-.3px}
+  .btn.pri{background:linear-gradient(100deg,#c9b2ff,#ffa9dd);color:#1a1024}
+  .btn.pri:hover{filter:brightness(1.05)}
+  .btn.ghost{background:rgba(255,255,255,.05);border-color:var(--line2);color:#ded7f5}
+  .btn.ghost:hover{background:rgba(255,255,255,.1);color:#fff}
+  .btn.wide{grid-column:1/-1}
+  .sharetext{margin-top:12px;border:1px dashed rgba(255,255,255,.2);border-radius:11px;padding:10px 12px;
+    font-size:11.5px;color:#bdb4d8;line-height:1.6;white-space:pre-wrap;overflow-wrap:anywhere}
+
+  .alltypes{margin-top:22px}
+  .alltypes h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim2);margin:0 0 9px}
+  .tgrid{display:grid;gap:7px;grid-template-columns:1fr 1fr}
+  @media(min-width:560px){.tgrid{grid-template-columns:repeat(4,1fr)}}
+  .tchip{border:1px solid var(--line);border-radius:10px;padding:7px 9px;background:rgba(255,255,255,.03);
+    font-size:11px;color:var(--dim);min-width:0}
+  .tchip b{display:block;font-size:11.5px;color:#d7cff2;letter-spacing:-.2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .tchip.me{border-color:rgba(183,156,255,.55);background:rgba(183,156,255,.14)}
+  .tchip.me b{color:#fff}
+  .tchip .c{font-size:9.5px;font-weight:900;letter-spacing:.08em;color:var(--dim2)}
+
+  .foot{margin-top:24px;font-size:11.5px;color:var(--dim2);text-align:center;line-height:1.8}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translate(-50%,14px);
+    background:#2a2440;color:#fff;border:1px solid var(--line2);border-radius:999px;padding:10px 18px;
+    font-size:12.5px;font-weight:800;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:60;
+    box-shadow:0 18px 40px -20px #000;max-width:calc(100% - 28px);text-align:center}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="../index.html">← 2026-11-26 목록</a>
+    <span class="pill">16문항 · 약 2분</span>
+  </div>
+
+  <!-- ============ 시작 ============ -->
+  <section class="screen" id="scIntro">
+    <p class="eyebrow"><span class="dot" aria-hidden="true"></span>BALANCE PICK</p>
+    <h1>둘 중 하나만<br><em>고른다면</em> — 나는?</h1>
+    <p class="lede">정답은 없습니다. 16개의 밸런스 질문에 끌리는 쪽을 눌러 가면, 나의 선택 취향이 4가지 축으로 갈라져 16가지 유형 중 하나로 나옵니다.</p>
+    <div class="facts">
+      <span class="fact"><b>16</b>문항</span>
+      <span class="fact"><b>4</b>가지 축</span>
+      <span class="fact"><b>16</b>가지 유형</span>
+      <span class="fact">정답 없음</span>
+    </div>
+    <button class="start" id="startBtn" type="button">테스트 시작하기<small>1 · 2 키 또는 A · B 키로도 고를 수 있어요</small></button>
+    <div class="lastcard" id="lastCard" hidden>
+      <span class="ic" id="lastIc" aria-hidden="true">✨</span>
+      <div class="tx">
+        <div class="k">지난 결과</div>
+        <div class="n" id="lastName">–</div>
+        <div class="d" id="lastWhen">–</div>
+      </div>
+      <button type="button" id="lastBtn">결과 다시 보기</button>
+    </div>
+    <p class="collect" id="collect" hidden></p>
+  </section>
+
+  <!-- ============ 질문 ============ -->
+  <section class="screen" id="scQuiz" hidden>
+    <div class="qtop">
+      <span class="n"><b id="qn">1</b> / 16</span>
+      <span class="pct" id="qpct">0%</span>
+    </div>
+    <div class="pbar" role="progressbar" aria-label="진행률" aria-valuemin="0" aria-valuemax="16" aria-valuenow="0" id="pbar">
+      <i id="pfill"></i>
+    </div>
+    <p class="qmeta" id="qaxis">선택</p>
+    <h2 class="q" id="qtext">질문</h2>
+    <div class="opts" id="opts"></div>
+    <div class="qfoot">
+      <div class="qleft">
+        <button class="qback" id="backBtn" type="button">← 이전 질문</button>
+        <button class="qback" id="quitBtn" type="button">그만두기</button>
+      </div>
+      <span class="kb"><kbd>1</kbd><kbd>2</kbd> 또는 <kbd>←</kbd> 이전</span>
+    </div>
+  </section>
+
+  <!-- ============ 결과 ============ -->
+  <section class="screen" id="scResult" hidden>
+    <div class="rcard">
+      <div class="rcode" id="rCode"></div>
+      <div class="rname">
+        <span class="ic" id="rIc" aria-hidden="true">✨</span>
+        <div>
+          <h2 id="rName">–</h2>
+          <div class="sub" id="rSub">–</div>
+        </div>
+      </div>
+      <p class="rdesc" id="rDesc"></p>
+      <div id="rAxes"></div>
+      <div class="rbox"><div class="k">이런 점이 강해요</div><div class="v" id="rStrong">–</div></div>
+      <div class="rbox"><div class="k">한 가지만 조심하면</div><div class="v" id="rWatch">–</div></div>
+      <div class="rbox"><div class="k">잘 맞는 유형</div><div class="v" id="rMatch">–</div></div>
+      <div class="ractions">
+        <button class="btn pri" id="shareBtn" type="button">결과 복사해서 공유</button>
+        <button class="btn ghost" id="againBtn" type="button">다시 하기</button>
+        <button class="btn ghost wide" id="homeBtn" type="button">처음 화면으로</button>
+      </div>
+      <div class="sharetext" id="shareText"></div>
+    </div>
+
+    <div class="alltypes">
+      <h3>16가지 유형</h3>
+      <div class="tgrid" id="tGrid"></div>
+    </div>
+  </section>
+
+  <p class="foot">
+    순수 HTML/CSS/JS 단일 파일 · 외부 라이브러리·웹폰트 0개 · 답변과 결과는 <code>localStorage</code>에만 저장<br>
+    재미로 보는 테스트입니다. 어떤 유형이 나와도 좋은 쪽입니다.
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+  var KEY = 'balance:v1';        // 진행 중인 답변
+  var LAST = 'balance:last:v1';  // 마지막으로 끝낸 결과
+  var HIST = 'balance:history:v1'; // 지금까지 만난 유형
+
+  /* ---------------- 축 ---------------- */
+  var AXES = [
+    { id: 'soc',   pos: 'O', neg: 'A', posL: '함께', negL: '혼자',   name: '에너지' },
+    { id: 'plan',  pos: 'P', neg: 'F', posL: '계획', negL: '즉흥',   name: '일정' },
+    { id: 'money', pos: 'T', neg: 'X', posL: '실속', negL: '플렉스', name: '지갑' },
+    { id: 'risk',  pos: 'N', neg: 'D', posL: '안정', negL: '도전',   name: '모험' }
+  ];
+  var AX = {};
+  AXES.forEach(function (a) { AX[a.id] = a; });
+
+  /* ---------------- 질문 16 ---------------- */
+  var QS = [
+    { q: '금요일 퇴근 직후, 더 끌리는 쪽은?', axis: 'soc',
+      a: { t: '바로 약속 잡고 사람들 속으로', c: 'O', sec: ['risk', 'D'] },
+      b: { t: '집에 가서 조용히 충전', c: 'A', sec: ['risk', 'N'] } },
+    { q: '여행 일주일 전, 내 준비 상태는?', axis: 'plan',
+      a: { t: '동선·예약·맛집까지 표로 정리', c: 'P', sec: ['soc', 'A'] },
+      b: { t: '숙소만 잡고 나머지는 현지에서', c: 'F', sec: ['soc', 'O'] } },
+    { q: '갖고 싶던 물건이 30% 할인 중이다', axis: 'money',
+      a: { t: '필요한지 따져 보고, 필요하면 산다', c: 'T', sec: ['plan', 'P'] },
+      b: { t: '지금 아니면 못 사니 일단 담는다', c: 'X', sec: ['plan', 'F'] } },
+    { q: '새로 생긴 맛집, 웨이팅 40분', axis: 'risk',
+      a: { t: '기다려서라도 먹어 본다', c: 'D', sec: ['money', 'X'] },
+      b: { t: '덜 붐빌 때 다시 온다', c: 'N', sec: ['money', 'T'] } },
+    { q: '내 생일, 진짜 원하는 건?', axis: 'soc',
+      a: { t: '여러 명이 모여 시끌벅적하게', c: 'O' },
+      b: { t: '한두 명, 혹은 혼자 조용히', c: 'A' } },
+    { q: '주말 아침, 계획 없이 눈을 떴다', axis: 'plan',
+      a: { t: '오늘 할 일을 먼저 적는다', c: 'P', sec: ['risk', 'N'] },
+      b: { t: '마음 가는 대로 움직여 본다', c: 'F', sec: ['risk', 'D'] } },
+    { q: '친구와 밥을 먹고 계산할 때', axis: 'money',
+      a: { t: '각자 먹은 만큼, 또는 더치페이', c: 'T', sec: ['soc', 'A'] },
+      b: { t: '한 명이 쏘고 다음에 받는 게 편하다', c: 'X', sec: ['soc', 'O'] } },
+    { q: '연봉은 비슷한데 낯선 회사에서 제안이 왔다', axis: 'risk',
+      a: { t: '새 판에서 부딪혀 보고 싶다', c: 'D', sec: ['plan', 'F'] },
+      b: { t: '지금 자리에서 더 깊어지는 게 낫다', c: 'N', sec: ['plan', 'P'] } },
+    { q: '회식 2차 제안이 왔다', axis: 'soc',
+      a: { t: '여기서 끝내고 집으로', c: 'A', sec: ['money', 'T'] },
+      b: { t: '2차까지 가야 진짜 끝', c: 'O', sec: ['money', 'X'] } },
+    { q: '약속 시간 30분 전, 나는?', axis: 'plan',
+      a: { t: '이미 근처에 도착해 있다', c: 'P' },
+      b: { t: '이제 막 나선다', c: 'F' } },
+    { q: '이번 달 용돈이 조금 남았다', axis: 'money',
+      a: { t: '저축하거나 다음 달로 넘긴다', c: 'T', sec: ['risk', 'N'] },
+      b: { t: '갖고 싶던 걸 산다', c: 'X', sec: ['risk', 'D'] } },
+    { q: '집에 놓을 가구를 고른다면', axis: 'risk',
+      a: { t: '오래 쓸 무난한 기본템', c: 'N', sec: ['soc', 'A'] },
+      b: { t: '눈에 띄는 색, 과감하게', c: 'D', sec: ['soc', 'O'] } },
+    { q: '단톡방에 여행 계획이 올라왔다', axis: 'soc',
+      a: { t: '바로 참여 의사 보내고 일정 조율', c: 'O', sec: ['plan', 'P'] },
+      b: { t: '일단 읽고, 혼자 갈지 고민', c: 'A', sec: ['plan', 'F'] } },
+    { q: '월급날, 통장을 보는 순간', axis: 'plan',
+      a: { t: '고정지출과 저축을 먼저 떼어 둔다', c: 'P', sec: ['money', 'T'] },
+      b: { t: '이번 달은 흘러가는 대로 둔다', c: 'F', sec: ['money', 'X'] } },
+    { q: '친구가 비싼 카페를 가자고 한다', axis: 'money',
+      a: { t: '근처에 괜찮은 데가 있다고 제안', c: 'T' },
+      b: { t: '오케이, 가 보자', c: 'X' } },
+    { q: '번지점프대 앞에 섰다', axis: 'risk',
+      a: { t: '안전장치와 설명을 다시 확인한다', c: 'N' },
+      b: { t: '설명 끝나기 무섭게 뛴다', c: 'D' } }
+  ];
+
+  /* ---------------- 16유형 ---------------- */
+  var TYPES = {
+    OPTN: { ic: '🧾', name: '모임의 살림꾼', sub: '함께 · 계획 · 실속 · 안정',
+      desc: '사람을 좋아하지만 즉흥적인 지출은 싫습니다. 모임이 굴러가게 예산과 순서를 조용히 맞춰 주는 쪽이고, 끝나고 나서 "오늘 얼마 썼더라"를 가장 먼저 아는 사람입니다.',
+      strong: '약속을 어기지 않고, 계산이 깔끔해 모두가 편합니다.',
+      watch: '계획이 어긋나면 속이 상합니다. 조금은 비워 두세요.',
+      match: 'OFXD', matchWhy: '즉흥적인 사람이 판을 벌리고, 당신이 살림을 맡으면 최고의 조합입니다.' },
+    OPTD: { ic: '🗺️', name: '계획형 모험 대장', sub: '함께 · 계획 · 실속 · 도전',
+      desc: '새로운 곳을 가고 싶어도 허투루 가지는 않습니다. 예약과 예산은 단단히 잡아 두고, 그 안에서 가장 신나는 코스를 골라 사람들을 데려갑니다.',
+      strong: '계획과 추진력이 같이 있어, 같이 있으면 여행이 잘 됩니다.',
+      watch: '다들 지쳤을 때도 일정을 밀어붙이지 않게 속도를 보세요.',
+      match: 'AFXN', matchWhy: '즉흥적인 사람이 예상 밖 재미를 더하고, 당신이 길을 잃지 않게 잡아 줍니다.' },
+    OPXN: { ic: '🍷', name: '품격 있는 호스트', sub: '함께 · 계획 · 플렉스 · 안정',
+      desc: '사람을 초대하는 데 돈과 정성을 아끼지 않습니다. 분위기와 동선을 미리 그려 두고, 손님이 불편하지 않게 조용히 살피는 유형입니다.',
+      strong: '사람을 편하게 만드는 감각이 좋습니다.',
+      watch: '과한 준비로 지치지 않게, 때로는 대충해도 괜찮습니다.',
+      match: 'AFTN', matchWhy: '느긋한 사람이 당신의 준비를 편하게 받아 주고 부담을 덜어 줍니다.' },
+    OPXD: { ic: '🎪', name: '이벤트 기획자', sub: '함께 · 계획 · 플렉스 · 도전',
+      desc: '무언가를 벌이는 걸 좋아합니다. 예약도 동선도 미리 짜지만, 그 판을 크게 키우는 데 망설임이 없습니다. 기억에 남는 하루를 만드는 쪽입니다.',
+      strong: '사람을 모으고 판을 키우는 힘이 있습니다.',
+      watch: '뒤처리(정산·뒷정리)를 미루지 마세요.',
+      match: 'AFTN', matchWhy: '차분한 사람이 뒤를 정리해 주면 당신은 마음껏 벌일 수 있습니다.' },
+    OFTN: { ic: '🥘', name: '뜻밖의 알뜰러', sub: '함께 · 즉흥 · 실속 · 안정',
+      desc: '약속은 갑자기 잡지만, 돈은 새지 않습니다. "가자" 하고 나가서도 제일 괜찮은 가성비 집을 찾아냅니다.',
+      strong: '가볍게 나가도 지갑이 든든합니다.',
+      watch: '즉흥적인 약속이 겹치면 정리가 어려워집니다.',
+      match: 'OPXD', matchWhy: '크게 벌이는 사람 옆에서 현실을 잡아 주는 조합입니다.' },
+    OFTD: { ic: '🎒', name: '발길 닿는 대로', sub: '함께 · 즉흥 · 실속 · 도전',
+      desc: '계획 없이 떠나도 크게 쓰지 않습니다. 사람들과 어디든 가고, 예산 안에서 가장 재미있는 길을 그때그때 찾습니다.',
+      strong: '어디서든 적응하고, 같이 있으면 일이 풀립니다.',
+      watch: '결정을 미루다 좋은 자리를 놓칠 수 있습니다.',
+      match: 'OPTN', matchWhy: '단단한 사람이 예약과 예산을 잡아 주면 여행이 완성됩니다.' },
+    OFXN: { ic: '🎈', name: '분위기 메이커', sub: '함께 · 즉흥 · 플렉스 · 안정',
+      desc: '사람이 모이는 자리에서 가장 빨리 어울립니다. 계획은 없지만 눈치가 빨라 분위기가 가라앉으면 먼저 웃깁니다.',
+      strong: '어색한 자리를 편하게 만드는 재주가 있습니다.',
+      watch: '기분 좋게 쓴 돈이 쌓입니다. 한 번씩만 확인하세요.',
+      match: 'APTN', matchWhy: '차분한 사람이 당신의 에너지를 정리해 주면 오래 갑니다.' },
+    OFXD: { ic: '🔥', name: '무대 체질', sub: '함께 · 즉흥 · 플렉스 · 도전',
+      desc: '새로운 자리, 새로운 사람에게 먼저 다가갑니다. 계획 없이 나가도 결국 가장 재미있는 사건을 만들고 옵니다.',
+      strong: '시작하는 힘과 사람을 끌어당기는 힘이 큽니다.',
+      watch: '충동 결제와 약속 과다를 한 번씩 점검하세요.',
+      match: 'OPTN', matchWhy: '살림꾼이 뒤를 받쳐 주면 당신의 무대가 안전해집니다.' },
+    APTN: { ic: '📈', name: '조용한 재테크 장인', sub: '혼자 · 계획 · 실속 · 안정',
+      desc: '혼자만의 시간에 가장 편안하고, 그 시간을 계획과 저축으로 바꿉니다. 사람 많은 자리보다 통장 숫자가 오르는 쪽이 마음 편합니다.',
+      strong: '한번 정한 목표를 조용히 끝까지 갑니다.',
+      watch: '기회가 와도 "다음에" 하다 놓칠 수 있습니다.',
+      match: 'OFXN', matchWhy: '밝은 사람이 당신의 방에 가끔 바람을 넣어 줍니다.' },
+    APTD: { ic: '🧭', name: '혼자 떠나는 배낭러', sub: '혼자 · 계획 · 실속 · 도전',
+      desc: '누구와도 맞추지 않아도 되는 여행을 좋아합니다. 예산은 단단히 잡고, 낯선 길은 혼자 걸어 보며 자기 페이스를 지킵니다.',
+      strong: '혼자서도 계획을 끝까지 해냅니다.',
+      watch: '혼자 결정하다 보면 다른 사람 속도를 잊습니다.',
+      match: 'OPXN', matchWhy: '기다려 주는 사람과 만나면 여행이 훨씬 넓어집니다.' },
+    APXN: { ic: '🖼️', name: '나만의 큐레이터', sub: '혼자 · 계획 · 플렉스 · 안정',
+      desc: '혼자 고르고, 좋은 것을 오래 씁니다. 남들 눈보다 내 눈에 맞는지를 먼저 보고, 그 기준에 맞으면 값을 크게 봅니다.',
+      strong: '취향이 뚜렷하고 흔들리지 않습니다.',
+      watch: '기준이 높아 시작을 미루게 됩니다.',
+      match: 'OFTD', matchWhy: '가볍게 들어오는 사람이 당신의 완벽을 풀어 줍니다.' },
+    APXD: { ic: '🚀', name: '혼자서도 완벽한 프로젝트', sub: '혼자 · 계획 · 플렉스 · 도전',
+      desc: '하고 싶은 일이 생기면 혼자서 판을 다 짭니다. 계획도 지출도 과감해서, 완성되면 주변이 놀랄 결과물이 남습니다.',
+      strong: '혼자서도 결과물을 끝까지 만들어 냅니다.',
+      watch: '혼자 다 하려다 지칩니다. 하나는 맡겨 보세요.',
+      match: 'OFXN', matchWhy: '사람을 부드럽게 모으는 사람이 당신의 결과를 알려 줍니다.' },
+    AFTN: { ic: '🛋️', name: '느긋한 집순이·집돌이', sub: '혼자 · 즉흥 · 실속 · 안정',
+      desc: '계획 없이 집에서 보내는 하루가 가장 좋습니다. 나가자고 하면 나가지만, 집에 있으면 돈도 안 쓰고 마음도 편합니다.',
+      strong: '혼자 있는 시간을 잘 씁니다. 지출도 적습니다.',
+      watch: '연락이 뜸해지면 사람이 멀어집니다. 한 번씩 먼저 보내세요.',
+      match: 'OPXD', matchWhy: '당신을 끌어내 주는 사람과 만나면 좋은 날이 생깁니다.' },
+    AFTD: { ic: '🌀', name: '충동과 절약 사이', sub: '혼자 · 즉흥 · 실속 · 도전',
+      desc: '충동적으로 어디론가 떠나지만 늘 가성비를 봅니다. 혼자서 낯선 곳에 가서도 어떻게든 저렴하게 해내는 재주가 있습니다.',
+      strong: '혼자서도 새로운 시도를 두려워하지 않습니다.',
+      watch: '즉흥 결정이 반복되면 정리가 안 됩니다.',
+      match: 'OPXN', matchWhy: '차분한 사람이 당신의 즉흥을 기록해 주면 더 멀리 갑니다.' },
+    AFXN: { ic: '🛍️', name: '새벽의 쇼핑 탐험가', sub: '혼자 · 즉흥 · 플렉스 · 안정',
+      desc: '혼자 조용히 돌아다니다가 마음에 드는 것을 발견하면 바로 삽니다. 계획은 없지만 취향은 확실하고, 그 취향에 돈을 씁니다.',
+      strong: '취향을 발견하는 감각이 빠릅니다.',
+      watch: '새벽의 장바구니는 다음 날 아침에 한 번 더 보세요.',
+      match: 'OPTN', matchWhy: '단단한 사람이 예산을 잡아 주면 마음껏 즐길 수 있습니다.' },
+    AFXD: { ic: '🌊', name: '자유로운 즉흥파', sub: '혼자 · 즉흥 · 플렉스 · 도전',
+      desc: '계획도, 사람도, 정해진 길도 답답합니다. 마음이 가면 바로 움직이고, 그 자리에서 가장 신선한 것을 골라 옵니다.',
+      strong: '새로움을 두려워하지 않고 어디서든 살아남습니다.',
+      watch: '한 번도 마무리하지 못한 일이 있는지 돌아보세요.',
+      match: 'OPTN', matchWhy: '뒤를 정리해 주는 사람을 만나면 자유가 오래갑니다.' }
+  };
+
+  var $ = function (s) { return document.querySelector(s); };
+  var state = { i: 0, answers: [], result: null, code: null };
+
+  /* ---------------- 계산 ---------------- */
+  function tally(answers) {
+    var w = {};
+    AXES.forEach(function (a) { w[a.id] = { pos: 0, neg: 0 }; });
+    answers.forEach(function (opt, qi) {
+      var q = QS[qi];
+      if (!q || opt == null) return;
+      var o = opt === 0 ? q.a : q.b;
+      var ax = AX[q.axis];
+      if (o.c === ax.pos) w[ax.id].pos++; else w[ax.id].neg++;
+      if (o.sec) {
+        var s2 = AX[o.sec[0]];
+        if (o.sec[1] === s2.pos) w[s2.id].pos++; else w[s2.id].neg++;
+      }
+    });
+    var code = '', pct = {};
+    AXES.forEach(function (a) {
+      var x = w[a.id];
+      code += x.pos > x.neg ? a.pos : a.neg;
+      pct[a.id] = Math.round((x.pos / (x.pos + x.neg || 1)) * 100);
+    });
+    return { code: code, w: w, pct: pct };
+  }
+
+  /* ---------------- 렌더: 질문 ---------------- */
+  function renderQ() {
+    var i = state.i, q = QS[i];
+    $('#qn').textContent = i + 1;
+    var pctDone = Math.round(((i + 1) / QS.length) * 100);
+    $('#qpct').textContent = pctDone + '%';
+    $('#pfill').style.width = pctDone + '%';
+    $('#pbar').setAttribute('aria-valuenow', String(i));
+    $('#qaxis').textContent = AX[q.axis].name + ' 취향';
+    $('#qtext').textContent = q.q;
+    $('#backBtn').disabled = i === 0;
+    var opts = [q.a, q.b];
+    $('#opts').innerHTML = opts.map(function (o, k) {
+      return '<button class="opt' + (k === 1 ? ' b' : '') + '" type="button" data-k="' + k + '">' +
+        '<span class="mk" aria-hidden="true">' + (k === 0 ? 'A' : 'B') + '</span>' +
+        '<span class="tx">' + o.t + '</span></button>';
+    }).join('');
+  }
+
+  var lock = false;
+  function pick(k) {
+    if (lock) return;
+    lock = true;
+    state.answers[state.i] = k;
+    if (state.i < QS.length - 1) {
+      state.i++;
+      renderQ();
+      save();
+      lock = false;
+      if (state.i === QS.length - 1) {
+        $('#opts').querySelector('.opt').focus({ preventScroll: true });
+      }
+      return;
+    }
+    finish();
+    lock = false;
+  }
+
+  function finish() {
+    var t = tally(state.answers);
+    state.code = t.code;
+    state.result = t;
+    var typ = TYPES[t.code];
+    state.date = Date.now();
+    save();
+    try {
+      localStorage.setItem(LAST, JSON.stringify({
+        answers: state.answers.slice(), code: t.code, date: state.date
+      }));
+    } catch (e) {}
+    pushHistory(t.code);
+    renderResult();
+    show('result');
+  }
+
+  /* ---------------- 렌더: 결과 ---------------- */
+  function renderResult() {
+    var t = state.result, typ = TYPES[state.code];
+    $('#rCode').innerHTML = state.code.split('').map(function (c, i) {
+      return '<span title="' + AX[AXES[i].id].name + '">' + c + '</span>';
+    }).join('');
+    $('#rIc').textContent = typ.ic;
+    $('#rName').textContent = typ.name;
+    $('#rSub').textContent = typ.sub;
+    $('#rDesc').textContent = typ.desc;
+    $('#rStrong').textContent = typ.strong;
+    $('#rWatch').textContent = typ.watch;
+    var m = TYPES[typ.match];
+    $('#rMatch').textContent = (m ? m.ic + ' ' + m.name : typ.match) + ' — ' + typ.matchWhy;
+
+    $('#rAxes').innerHTML = AXES.map(function (a) {
+      var p = t.pct[a.id];
+      return '<div class="axis">' +
+        '<span class="lab">' + a.posL + '</span>' +
+        '<span class="bar"><i style="width:' + p + '%"></i></span>' +
+        '<span class="lab r">' + a.negL + '</span>' +
+        '<span class="val"><span><b>' + p + '%</b> ' + a.posL + '</span><span><b>' + (100 - p) + '%</b> ' + a.negL + '</span></span>' +
+        '</div>';
+    }).join('');
+
+    var share = '밸런스 성향 테스트 — 나는 "' + typ.name + '" ' + typ.ic + '\n' +
+      state.code.slice(0, 4).split('').map(function (c, i) {
+        var a = AXES[i];
+        return c === a.pos ? a.posL : a.negL;
+      }).join(' · ') + '\n' +
+      axLine() + '\n직접 해 보기 → ' + location.origin + location.pathname;
+    $('#shareText').textContent = share;
+
+    var hist = loadHistory();
+    var mine = {};
+    hist.forEach(function (h) { mine[h] = true; });
+    mine[state.code] = true;
+    var keys = Object.keys(TYPES);
+    $('#tGrid').innerHTML = keys.map(function (k) {
+      var ty = TYPES[k];
+      return '<div class="tchip' + (k === state.code ? ' me' : '') + '">' +
+        '<span class="c">' + k + '</span><b title="' + ty.name + '">' + ty.name + '</b></div>';
+    }).join('');
+    var seen = keys.filter(function (k) { return mine[k]; }).length;
+    $('#collect').hidden = false;
+    $('#collect').innerHTML = '지금까지 만난 유형 <b>' + seen + ' / 16</b> · 다시 하면 다른 유형도 나옵니다';
+  }
+
+  function axLine() {
+    var t = state.result;
+    return AXES.map(function (a) {
+      return a.posL + ' ' + t.pct[a.id] + '%';
+    }).join(' · ');
+  }
+
+  /* ---------------- 화면 전환 ---------------- */
+  function show(which) {
+    ['intro', 'quiz', 'result'].forEach(function (s) {
+      var el = document.getElementById('sc' + s.charAt(0).toUpperCase() + s.slice(1));
+      if (el) el.hidden = (s !== which);
+    });
+    window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
+  /* ---------------- 저장 ---------------- */
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({
+        answers: state.answers, i: state.i, code: state.code, date: state.date || 0, done: !!state.result
+      }));
+    } catch (e) {}
+  }
+  function loadSaved() {
+    var raw = null;
+    try { raw = localStorage.getItem(LAST); } catch (e) {}
+    if (!raw) return null;
+    try {
+      var s = JSON.parse(raw);
+      if (s && s.code && TYPES[s.code] && Array.isArray(s.answers)) return s;
+    } catch (e) {}
+    return null;
+  }
+  function pushHistory(code) {
+    try {
+      var h = loadHistory();
+      if (h[h.length - 1] !== code) h.push(code);
+      h = h.slice(-12);
+      localStorage.setItem(HIST, JSON.stringify(h));
+    } catch (e) {}
+  }
+  function loadHistory() {
+    try {
+      var h = JSON.parse(localStorage.getItem(HIST) || '[]');
+      return Array.isArray(h) ? h.filter(function (c) { return TYPES[c]; }) : [];
+    } catch (e) { return []; }
+  }
+  function relWhen(ts) {
+    if (!ts) return '';
+    var d = new Date(ts);
+    var p = function (x) { return (x < 10 ? '0' : '') + x; };
+    return d.getFullYear() + '.' + p(d.getMonth() + 1) + '.' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes());
+  }
+
+  /* ---------------- 토스트 ---------------- */
+  var tt = null;
+  function toast(msg) {
+    var el = $('#toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(tt);
+    tt = setTimeout(function () { el.classList.remove('show'); }, 1900);
+  }
+
+  function copyText(text, okMsg) {
+    function ok() { toast(okMsg); }
+    function fail() {
+      try {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        var done = document.execCommand('copy');
+        document.body.removeChild(ta);
+        if (done) ok(); else toast('복사에 실패했어요');
+      } catch (e) { toast('복사에 실패했어요'); }
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(ok, fail);
+    } else fail();
+  }
+
+  /* ---------------- 시작 ---------------- */
+  function start() {
+    state.i = 0;
+    state.answers = [];
+    state.result = null;
+    state.code = null;
+    save();
+    renderQ();
+    show('quiz');
+    $('#opts').querySelector('.opt').focus({ preventScroll: true });
+  }
+
+  function showLast() {
+    var s = loadSaved();
+    if (!s) return;
+    state.answers = s.answers || [];
+    state.code = s.code;
+    state.result = tally(state.answers);
+    state.date = s.date;
+    renderResult();
+    show('result');
+  }
+
+  $('#startBtn').addEventListener('click', start);
+  $('#opts').addEventListener('click', function (e) {
+    var b = e.target.closest('.opt');
+    if (!b) return;
+    b.classList.add('chosen');
+    var k = Number(b.getAttribute('data-k'));
+    setTimeout(function () { pick(k); }, 130);
+  });
+  $('#backBtn').addEventListener('click', function () {
+    if (state.i === 0) return;
+    state.i--;
+    renderQ();
+    save();
+  });
+  $('#shareBtn').addEventListener('click', function () {
+    copyText($('#shareText').textContent, '결과를 복사했어요 — 붙여넣기만 하면 됩니다');
+  });
+  $('#againBtn').addEventListener('click', start);
+  $('#homeBtn').addEventListener('click', function () {
+    refreshIntro();
+    show('intro');
+  });
+  $('#quitBtn').addEventListener('click', function () {
+    refreshIntro();
+    show('intro');
+  });
+  $('#lastBtn').addEventListener('click', showLast);
+
+  document.addEventListener('keydown', function (e) {
+    if (document.getElementById('scQuiz').hidden) return;
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if (e.key === '1' || e.key === 'a' || e.key === 'A') { e.preventDefault(); pick(0); }
+    else if (e.key === '2' || e.key === 'b' || e.key === 'B') { e.preventDefault(); pick(1); }
+    else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      if (state.i > 0) { state.i--; renderQ(); save(); }
+    }
+  });
+
+  function refreshIntro() {
+    var s = loadSaved();
+    if (s && TYPES[s.code]) {
+      $('#lastCard').hidden = false;
+      $('#lastIc').textContent = TYPES[s.code].ic;
+      $('#lastName').textContent = TYPES[s.code].name;
+      $('#lastWhen').textContent = relWhen(s.date) + ' · ' + s.code;
+    } else {
+      $('#lastCard').hidden = true;
+    }
+    var hist = loadHistory();
+    var uniq = {};
+    hist.forEach(function (c) { uniq[c] = true; });
+    if (Object.keys(uniq).length) {
+      $('#collect').hidden = false;
+      $('#collect').innerHTML = '지금까지 만난 유형 <b>' + Object.keys(uniq).length + ' / 16</b>';
+    }
+  }
+
+  refreshIntro();
+  show('intro');
+
+  /* ---------------- 테스트용 API ---------------- */
+  window.Balance = {
+    questions: function () { return JSON.parse(JSON.stringify(QS)); },
+    axes: function () { return JSON.parse(JSON.stringify(AXES)); },
+    types: function () { return JSON.parse(JSON.stringify(TYPES)); },
+    tally: function (answers) { return tally(answers || state.answers); },
+    state: function () {
+      return { i: state.i, answers: state.answers.slice(), code: state.code, done: !!state.result };
+    },
+    shareText: function () { return $('#shareText').textContent; }
+  };
+})();
+</script>
+</body>
+</html>
