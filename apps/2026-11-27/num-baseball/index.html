@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#120d0b">
+<title>숫자 야구 챌린지 — 1~9 서로 다른 숫자 맞히기</title>
+<meta name="description" content="1~9 중 서로 다른 3·4·5자리 숫자를 스트라이크·볼 힌트로 맞히는 숫자 야구 게임. 시도 기록, 제외 숫자 표시, 자릿수별 최고 기록 저장.">
+<style>
+  [hidden]{display:none !important}
+  :root{
+    --bg:#120d0b; --bg2:#0c0908; --card:#1c1512; --card2:#171110;
+    --line:rgba(255,255,255,.085); --line2:rgba(255,255,255,.16);
+    --txt:#f3ece6; --dim:#a6978c; --dim2:#7c6d63;
+    --a:#ffab73; --a2:#ff8a4c; --a-ink:#1b0d04;
+    --s:#7ee787; --b:#7dd3fc; --o:#8b7d75; --bad:#fb7185;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{min-height:100vh;color:var(--txt);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(880px 440px at 90% -8%,rgba(255,171,115,.16),transparent 60%),
+      radial-gradient(700px 420px at 0% 10%,rgba(255,138,76,.10),transparent 58%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:620px;margin:0 auto;padding:22px 16px 64px}
+  a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--dim);
+    font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;background:rgba(255,255,255,.03);margin-bottom:18px}
+  a.back:hover{color:var(--txt);border-color:var(--line2)}
+  header h1{font-size:clamp(23px,5.4vw,31px);letter-spacing:-.8px;margin:0 0 6px}
+  header p{margin:0 0 18px;color:var(--dim);font-size:13.5px}
+
+  .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:16px;padding:16px;margin-bottom:13px}
+  .diff{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+  .diff button{appearance:none;font:inherit;cursor:pointer;border:1px solid var(--line);
+    background:rgba(255,255,255,.03);color:var(--dim);border-radius:11px;padding:8px 12px;
+    font-size:12.5px;font-weight:800;letter-spacing:-.2px;display:inline-flex;flex-direction:column;
+    align-items:flex-start;gap:1px;transition:background .15s,border-color .15s,color .15s}
+  .diff button small{font-size:10.5px;font-weight:700;color:var(--dim2);letter-spacing:0}
+  .diff button:hover{color:var(--txt);border-color:var(--line2)}
+  .diff button[aria-pressed="true"]{background:rgba(255,171,115,.18);border-color:rgba(255,171,115,.55);color:#ffe4cf}
+  .diff button[aria-pressed="true"] small{color:#e3b795}
+
+  .status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:13px}
+  .st{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0}
+  .st-k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--dim2)}
+  .st-v{display:block;font-size:19px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+  .st-v small{font-size:11.5px;color:var(--dim);font-weight:700;letter-spacing:0}
+
+  #msg{min-height:52px;display:grid;place-items:center;text-align:center;border-radius:13px;
+    border:1px dashed var(--line);background:rgba(255,255,255,.02);padding:10px;margin-bottom:12px;
+    font-size:14px;font-weight:800;letter-spacing:-.3px}
+  #msg.hit{color:#bff7c6;border-color:rgba(126,231,135,.45);background:rgba(126,231,135,.08)}
+  #msg.miss{color:#ffc9c0;border-color:rgba(251,113,133,.4);background:rgba(251,113,133,.08)}
+  #msg .sub{display:block;font-size:11.5px;font-weight:700;color:var(--dim);letter-spacing:0;margin-top:2px}
+
+  .entry{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  #guess{width:100%;min-width:0;padding:14px 16px;border-radius:13px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:var(--txt);font-size:24px;font-weight:800;
+    letter-spacing:.22em;text-align:center;font-variant-numeric:tabular-nums;
+    font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  #guess::placeholder{letter-spacing:.12em;font-size:15px;font-weight:700;color:var(--dim2)}
+  #guess:focus{outline:none;border-color:rgba(255,171,115,.65);box-shadow:0 0 0 3px rgba(255,171,115,.15)}
+  #guess:disabled{opacity:.45}
+  #submitBtn{appearance:none;font:inherit;cursor:pointer;border:0;border-radius:13px;padding:0 20px;
+    background:linear-gradient(135deg,var(--a),var(--a2));color:var(--a-ink);font-size:14px;font-weight:900;
+    letter-spacing:-.2px;white-space:nowrap;transition:filter .15s,transform .12s}
+  #submitBtn:hover{filter:brightness(1.06)}
+  #submitBtn:active{transform:scale(.98)}
+  #submitBtn:disabled{background:rgba(255,255,255,.08);color:var(--dim2);cursor:not-allowed}
+  .hintline{margin:9px 0 0;font-size:11.5px;color:var(--dim2);display:flex;gap:10px;flex-wrap:wrap}
+  .hintline kbd{font-family:inherit;background:rgba(255,255,255,.08);border-radius:5px;padding:1px 5px;
+    font-size:10.5px;font-weight:800;color:var(--dim)}
+  .err{margin:8px 0 0;font-size:12.5px;font-weight:800;color:var(--bad)}
+
+  h2.sec{font-size:13px;letter-spacing:.02em;margin:18px 0 9px;color:var(--dim);
+    text-transform:uppercase;font-weight:800}
+  .board{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:6px}
+  .dcell{aspect-ratio:1/1;display:grid;place-items:center;border-radius:10px;border:1px solid var(--line);
+    background:rgba(255,255,255,.035);font-size:14px;font-weight:800;font-variant-numeric:tabular-nums;
+    color:var(--dim);transition:background .2s,color .2s,border-color .2s}
+  .dcell.out{color:var(--dim2);text-decoration:line-through;background:rgba(255,255,255,.015);
+    border-color:rgba(255,255,255,.05);opacity:.55}
+  .dcell.hit{color:#0f1a12;background:var(--s);border-color:transparent}
+
+  ol.hist{list-style:none;margin:0;padding:0;display:grid;gap:6px;max-height:320px;overflow-y:auto}
+  ol.hist li{display:grid;grid-template-columns:26px minmax(0,1fr) auto;gap:9px;align-items:center;
+    padding:8px 10px;border-radius:11px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+  ol.hist li:first-child{border-color:rgba(255,171,115,.35);background:rgba(255,171,115,.07)}
+  ol.hist .no{font-size:11px;font-weight:800;color:var(--dim2);font-variant-numeric:tabular-nums}
+  ol.hist .num{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:16px;
+    font-weight:800;letter-spacing:.16em;overflow-wrap:anywhere}
+  ol.hist .res{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .sc{font-size:11px;font-weight:900;padding:2px 7px;border-radius:999px;border:1px solid transparent;
+    font-variant-numeric:tabular-nums}
+  .sc.s{background:rgba(126,231,135,.18);color:#a9f5b3;border-color:rgba(126,231,135,.35)}
+  .sc.b{background:rgba(125,211,252,.16);color:#bce9fd;border-color:rgba(125,211,252,.32)}
+  .sc.o{background:rgba(255,255,255,.06);color:var(--dim)}
+  .sc.w{background:var(--s);color:#0f1a12}
+  .empty{font-size:12.5px;color:var(--dim2);text-align:center;padding:14px 0}
+
+  .acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .btn{appearance:none;font:inherit;cursor:pointer;border-radius:11px;padding:10px 14px;font-size:12.5px;
+    font-weight:800;letter-spacing:-.2px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--txt);
+    transition:background .15s,border-color .15s,transform .12s}
+  .btn:hover{background:rgba(255,255,255,.09);border-color:var(--line2)}
+  .btn:active{transform:scale(.98)}
+  .btn.ghost{background:transparent;color:var(--dim)}
+  .btn.ghost:hover{color:var(--txt)}
+  .btn.warn{color:#ffc9c0;border-color:rgba(251,113,133,.35);background:rgba(251,113,133,.08)}
+
+  .rules{margin:0;padding:0 0 0 18px;font-size:12.5px;color:var(--dim);line-height:1.85}
+  .rules b{color:var(--txt)}
+  .note{margin-top:16px;font-size:12px;color:var(--dim2);line-height:1.7}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,14px);opacity:0;pointer-events:none;
+    background:#f3ece6;color:#120d0b;font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:999px;
+    box-shadow:0 18px 40px -18px rgba(0,0,0,.8);transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100vw - 32px)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../"><span aria-hidden="true">←</span> 오늘의 앱 3종</a>
+  <header>
+    <h1>숫자 야구 챌린지</h1>
+    <p>1~9 중 서로 다른 숫자. 스트라이크와 볼 힌트만으로 정답을 좁혀 보세요.</p>
+  </header>
+
+  <section class="panel">
+    <div class="diff" id="diff" role="group" aria-label="난이도"></div>
+
+    <div class="status">
+      <div class="st"><span class="st-k">도전</span><span class="st-v" id="stTries">0</span></div>
+      <div class="st"><span class="st-k">남은 기회</span><span class="st-v" id="stLeft">9</span></div>
+      <div class="st"><span class="st-k">최고 기록</span><span class="st-v" id="stBest">–</span></div>
+    </div>
+
+    <div id="msg" aria-live="polite">숫자를 입력하고 <b>확인</b>을 누르세요<span class="sub">맨 앞 0은 쓰지 않습니다 · 같은 숫자 반복 금지</span></div>
+
+    <div class="entry">
+      <input id="guess" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" spellcheck="false"
+             maxlength="5" aria-label="추리한 숫자" placeholder="예: 123">
+      <button id="submitBtn" type="button">확인</button>
+    </div>
+    <p class="err" id="errMsg" role="alert" hidden></p>
+    <div class="hintline">
+      <span><kbd>Enter</kbd> 확인</span>
+      <span><kbd>1</kbd>~<kbd>9</kbd> 바로 입력</span>
+      <span id="digitHelp">3자리</span>
+    </div>
+
+    <div class="acts">
+      <button class="btn" id="newBtn" type="button">새 게임</button>
+      <button class="btn ghost" id="giveUpBtn" type="button">포기하고 정답 보기</button>
+    </div>
+  </section>
+
+  <h2 class="sec">숫자 현황</h2>
+  <div class="board" id="board" aria-label="1부터 9까지 숫자 사용 현황"></div>
+
+  <h2 class="sec">시도 기록</h2>
+  <div class="panel" style="padding:12px">
+    <ol class="hist" id="hist"></ol>
+    <p class="empty" id="histEmpty">아직 시도가 없어요. 첫 숫자를 넣어 보세요.</p>
+  </div>
+
+  <h2 class="sec">규칙</h2>
+  <div class="panel">
+    <ul class="rules">
+      <li><b>스트라이크</b> — 숫자와 자리가 모두 맞음</li>
+      <li><b>볼</b> — 숫자는 있지만 자리가 다름</li>
+      <li><b>아웃</b> — 고른 숫자가 하나도 정답에 없음(제외 숫자로 표시)</li>
+      <li>자릿수별로 정해진 기회 안에 맞히면 승리, 남은 기회가 많을수록 좋은 기록입니다.</li>
+    </ul>
+  </div>
+
+  <p class="note">기록은 이 브라우저에만 저장됩니다. 외부 전송·로그인 없음.</p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'numbaseball:v1';
+  var LEVELS = [
+    { digits: 3, limit: 9,  label: '3자리', sub: '기회 9번' },
+    { digits: 4, limit: 10, label: '4자리', sub: '기회 10번' },
+    { digits: 5, limit: 12, label: '5자리', sub: '기회 12번' }
+  ];
+  var DIGITS = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+
+  var S = { digits: 3, limit: 9, secret: [], tries: [], done: false, win: false, revealed: false };
+  var stats = { plays: 0, wins: 0, best: {} };   // best: {3: 시도수, ...}
+
+  var $ = function (s) { return document.querySelector(s); };
+  var guessEl = $('#guess'), submitEl = $('#submitBtn'), msgEl = $('#msg'), errEl = $('#errMsg');
+  var histEl = $('#hist'), boardEl = $('#board'), toastEl = $('#toast');
+
+  /* ---------------------------------------------------------------- 저장 */
+  function loadStats() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!raw || typeof raw !== 'object') return;
+      stats.plays = Number(raw.plays) || 0;
+      stats.wins = Number(raw.wins) || 0;
+      if (raw.best && typeof raw.best === 'object') {
+        Object.keys(raw.best).forEach(function (k) {
+          var v = Number(raw.best[k]);
+          if (v > 0) stats.best[k] = v;
+        });
+      }
+    } catch (e) {}
+  }
+  function saveStats() {
+    try { localStorage.setItem(KEY, JSON.stringify(stats)); } catch (e) {}
+  }
+
+  /* ---------------------------------------------------------------- 게임 */
+  function pick(n) {
+    var pool = DIGITS.slice(), out = [];
+    var rnd = function (max) {
+      if (window.crypto && window.crypto.getRandomValues) {
+        var a = new Uint32Array(1);
+        window.crypto.getRandomValues(a);
+        return a[0] % max;
+      }
+      return Math.floor(Math.random() * max);
+    };
+    for (var i = 0; i < n; i++) {
+      var k = rnd(pool.length);
+      out.push(pool[k]);
+      pool.splice(k, 1);
+    }
+    return out;
+  }
+
+  function levelOf(d) {
+    for (var i = 0; i < LEVELS.length; i++) if (LEVELS[i].digits === d) return LEVELS[i];
+    return LEVELS[0];
+  }
+
+  function newGame(opts) {
+    opts = opts || {};
+    var lv = levelOf(Number(opts.digits) || 3);
+    S.digits = lv.digits;
+    S.limit = lv.limit;
+    S.secret = Array.isArray(opts.secret) && opts.secret.length === lv.digits
+      ? opts.secret.map(Number) : pick(lv.digits);
+    S.tries = [];
+    S.done = false;
+    S.win = false;
+    S.revealed = false;
+    guessEl.value = '';
+    guessEl.maxLength = S.digits;
+    guessEl.placeholder = '예: ' + '12345'.slice(0, S.digits);
+    render();
+    guessEl.focus();
+  }
+
+  function validate(str) {
+    var s = String(str == null ? '' : str).replace(/\s/g, '');
+    if (!s) return { msg: '숫자를 입력해 주세요.' };
+    if (!/^\d+$/.test(s)) return { msg: '숫자만 입력할 수 있어요.' };
+    if (s.length !== S.digits) return { msg: S.digits + '자리 숫자를 입력해 주세요.' };
+    if (s.indexOf('0') !== -1) return { msg: '이 게임은 1~9만 사용합니다. (0 없음)' };
+    var seen = {};
+    for (var i = 0; i < s.length; i++) {
+      if (seen[s[i]]) return { msg: '같은 숫자를 두 번 쓸 수 없어요.' };
+      seen[s[i]] = true;
+    }
+    if (S.tries.some(function (t) { return t.guess === s; })) return { msg: '이미 시도한 숫자예요.' };
+    return null;
+  }
+
+  function score(guess, secret) {
+    var st = 0, ba = 0;
+    for (var i = 0; i < guess.length; i++) {
+      if (Number(guess[i]) === secret[i]) st++;
+      else if (secret.indexOf(Number(guess[i])) !== -1) ba++;
+    }
+    return { s: st, b: ba };
+  }
+
+  function guess(str) {
+    if (S.done) return { ok: false, msg: '이미 끝난 게임이에요. 새 게임을 시작해 주세요.' };
+    var bad = validate(str);
+    if (bad) { errEl.textContent = bad.msg; errEl.hidden = false; return { ok: false, msg: bad.msg }; }
+    errEl.hidden = true;
+
+    var g = String(str).replace(/\s/g, '');
+    var sc = score(g, S.secret);
+    var row = { guess: g, s: sc.s, b: sc.b, no: S.tries.length + 1 };
+    S.tries.push(row);
+    guessEl.value = '';
+
+    var win = sc.s === S.digits;
+    if (win) {
+      S.done = true; S.win = true;
+      stats.plays++;
+      stats.wins++;
+      var key = String(S.digits);
+      if (!stats.best[key] || row.no < stats.best[key]) stats.best[key] = row.no;
+      saveStats();
+    } else if (S.tries.length >= S.limit) {
+      S.done = true; S.win = false; S.revealed = true;
+      stats.plays++;
+      saveStats();
+    }
+    render();
+    if (!S.done) guessEl.focus();
+    return { ok: true, s: sc.s, b: sc.b, win: win, done: S.done,
+             tries: S.tries.length, left: S.limit - S.tries.length };
+  }
+
+  function giveUp() {
+    if (S.done) { toast('이미 끝난 게임이에요'); return; }
+    S.done = true; S.win = false; S.revealed = true;
+    stats.plays++;
+    saveStats();
+    render();
+  }
+
+  /* ---------------------------------------------------------------- 렌더 */
+  function renderDiff() {
+    $('#diff').innerHTML = LEVELS.map(function (l) {
+      return '<button type="button" data-d="' + l.digits + '" aria-pressed="' + (l.digits === S.digits ? 'true' : 'false') +
+        '">' + l.label + '<small>' + l.sub + '</small></button>';
+    }).join('');
+  }
+
+  function renderStatus() {
+    var left = S.limit - S.tries.length;
+    $('#stTries').textContent = S.tries.length;
+    $('#stLeft').innerHTML = Math.max(0, left) + '<small> / ' + S.limit + '</small>';
+    var b = stats.best[String(S.digits)];
+    $('#stBest').innerHTML = b ? b + '<small>번</small>' : '–';
+    $('#digitHelp').textContent = S.digits + '자리 · 기회 ' + S.limit + '번';
+  }
+
+  function renderMsg() {
+    msgEl.className = '';
+    if (!S.tries.length) {
+      msgEl.innerHTML = '숫자를 입력하고 <b>확인</b>을 누르세요<span class="sub">맨 앞 0은 쓰지 않습니다 · 같은 숫자 반복 금지</span>';
+      return;
+    }
+    var last = S.tries[S.tries.length - 1];
+    if (S.win) {
+      msgEl.className = 'hit';
+      msgEl.innerHTML = '정답입니다! 🎉<span class="sub">' + S.tries.length + '번 만에 맞혔어요' +
+        (stats.best[String(S.digits)] === S.tries.length ? ' · 최고 기록 갱신' : '') + '</span>';
+      return;
+    }
+    if (S.done) {
+      msgEl.className = 'miss';
+      msgEl.innerHTML = '기회를 다 썼어요' + (S.revealed ? ' · 정답은 ' + S.secret.join('') : '') +
+        '<span class="sub">새 게임으로 다시 도전해 보세요</span>';
+      return;
+    }
+    if (last.s === 0 && last.b === 0) {
+      msgEl.innerHTML = '아웃! 이 숫자들은 정답에 없어요<span class="sub">아래 숫자 현황에서 제외된 숫자를 확인하세요</span>';
+    } else {
+      msgEl.innerHTML = last.s + ' 스트라이크 · ' + last.b + ' 볼<span class="sub">' +
+        (last.s ? '자리까지 맞은 숫자 ' + last.s + '개' : '숫자는 있지만 자리가 달라요') + '</span>';
+    }
+  }
+
+  function renderBoard() {
+    var out = {}, hit = {};
+    S.tries.forEach(function (t) {
+      if (t.s === 0 && t.b === 0) {
+        for (var i = 0; i < t.guess.length; i++) out[t.guess[i]] = true;
+      }
+    });
+    if (S.done && S.revealed) S.secret.forEach(function (d) { hit[d] = true; });
+    boardEl.innerHTML = DIGITS.map(function (d) {
+      var cls = 'dcell' + (hit[d] ? ' hit' : out[d] ? ' out' : '');
+      return '<div class="' + cls + '" data-d="' + d + '" title="' + d + (out[d] ? ' 제외' : '') + '">' + d + '</div>';
+    }).join('');
+  }
+
+  function renderHist() {
+    var list = S.tries.slice().reverse();
+    histEl.innerHTML = list.map(function (t) {
+      var res;
+      if (t.s === S.digits) res = '<span class="sc w">홈런</span>';
+      else if (t.s === 0 && t.b === 0) res = '<span class="sc o">아웃</span>';
+      else res = (t.s ? '<span class="sc s">' + t.s + 'S</span>' : '') +
+                 (t.b ? '<span class="sc b">' + t.b + 'B</span>' : '');
+      return '<li><span class="no">' + t.no + '</span><span class="num">' + t.guess + '</span>' +
+        '<span class="res">' + res + '</span></li>';
+    }).join('');
+    $('#histEmpty').hidden = S.tries.length > 0;
+    histEl.hidden = S.tries.length === 0;
+  }
+
+  function render() {
+    renderDiff();
+    renderStatus();
+    renderMsg();
+    renderBoard();
+    renderHist();
+    var over = S.done;
+    guessEl.disabled = over;
+    submitEl.disabled = over;
+    $('#giveUpBtn').hidden = over;
+    if (over) $('#newBtn').textContent = '새 게임 시작';
+    else $('#newBtn').textContent = '새 게임';
+  }
+
+  /* ---------------------------------------------------------------- 이벤트 */
+  function submit() {
+    var res = guess(guessEl.value);
+    if (res.ok && res.done && res.win) toast('정답! ' + res.tries + '번 만에 성공');
+    renderStatus();
+  }
+
+  submitEl.addEventListener('click', submit);
+  guessEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); submit(); }
+  });
+  guessEl.addEventListener('input', function () {
+    var v = this.value.replace(/[^0-9]/g, '').slice(0, S.digits);
+    if (v !== this.value) this.value = v;
+    errEl.hidden = true;
+  });
+
+  $('#diff').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-d]');
+    if (!b) return;
+    var d = Number(b.getAttribute('data-d'));
+    if (d === S.digits && !S.done && !S.tries.length) return;
+    newGame({ digits: d });
+    toast(d + '자리 게임 시작 — 기회 ' + levelOf(d).limit + '번');
+  });
+
+  $('#newBtn').addEventListener('click', function () {
+    newGame({ digits: S.digits });
+    toast('새 게임을 시작했어요');
+  });
+
+  $('#giveUpBtn').addEventListener('click', function () {
+    if (!S.tries.length) { toast('먼저 한 번은 시도해 보세요'); return; }
+    giveUp();
+    toast('정답은 ' + S.secret.join('') + ' 였어요');
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (document.activeElement === guessEl) return;
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    if (/^[1-9]$/.test(e.key) && !S.done) { guessEl.focus(); }
+  });
+
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------------------------------------------------------------- 공개 API(검증용) */
+  window.NumBaseball = {
+    newGame: newGame,
+    guess: guess,
+    levels: function () { return LEVELS.map(function (l) { return { digits: l.digits, limit: l.limit }; }); },
+    score: score,
+    state: function () {
+      return { digits: S.digits, limit: S.limit, secret: S.secret.slice(), done: S.done, win: S.win,
+        revealed: S.revealed, tries: S.tries.map(function (t) { return { guess: t.guess, s: t.s, b: t.b, no: t.no }; }),
+        left: S.limit - S.tries.length };
+    },
+    stats: function () { return JSON.parse(JSON.stringify(stats)); }
+  };
+
+  loadStats();
+  newGame({ digits: 3 });
+})();
+</script>
+</body>
+</html>

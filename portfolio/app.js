@@ -22,6 +22,7 @@
     favFilter: $('#favFilter'),
     favCount: $('#favCount'),
     groupToggle: $('#groupToggle'),
+    foldAll: $('#foldAllBtn'),
     layoutToggle: $('#layoutToggle'),
     resultLine: $('#resultLine'),
     empty: $('#empty'),
@@ -408,12 +409,49 @@
 
     el.grid.classList.toggle('grouped', state.group);
     el.groupToggle.setAttribute('aria-pressed', state.group ? 'true' : 'false');
+    syncFoldAll(list);
     el.grid.innerHTML = state.group
       ? groupHtml(list, toks)
       : list.map(function (a, i) { return cardHtml(a, i, toks); }).join('');
 
     // 모달이 열린 앱이 필터에서 사라졌다면 닫는다
     if (state.openSlug && !list.some(function (a) { return a.slug === state.openSlug; })) closeModal(true);
+  }
+
+  /* ------------------------------ 날짜 그룹 모두 접기/펼치기 ------------------------------ */
+  function visibleDates(list) {
+    var seen = {}, out = [];
+    list.forEach(function (a) {
+      var d = a.date || '';
+      if (!seen[d]) { seen[d] = true; out.push(d); }
+    });
+    return out;
+  }
+
+  function syncFoldAll(list) {
+    if (!el.foldAll) return;
+    el.foldAll.hidden = !state.group;
+    if (!state.group) return;
+    var dates = visibleDates(list || visibleApps());
+    var folded = dates.length > 0 && dates.every(function (d) { return isFolded(d); });
+    el.foldAll.innerHTML = '<span aria-hidden="true">' + (folded ? '▥' : '▤') + '</span> ' +
+      (folded ? '모두 펼치기' : '모두 접기');
+    el.foldAll.setAttribute('aria-pressed', folded ? 'true' : 'false');
+    el.foldAll.setAttribute('title', folded ? '모든 날짜 그룹 펼치기' : '모든 날짜 그룹 접기');
+  }
+
+  function toggleFoldAll() {
+    var dates = visibleDates(visibleApps());
+    if (!dates.length) return;
+    var folded = dates.every(function (d) { return isFolded(d); });
+    if (folded) {
+      state.collapsed = state.collapsed.filter(function (d) { return dates.indexOf(d) === -1; });
+    } else {
+      dates.forEach(function (d) { if (!isFolded(d)) state.collapsed.push(d); });
+    }
+    saveCollapsed();
+    render();
+    toast(folded ? dates.length + '개 그룹을 모두 펼쳤어요' : dates.length + '개 그룹을 모두 접었어요');
   }
 
   /* ------------------------------ 날짜 그룹 접기/펼치기 ------------------------------ */
@@ -593,6 +631,8 @@
     render();
     toast(state.group ? '날짜별로 묶어서 봅니다' : '한 화면으로 봅니다');
   });
+
+  if (el.foldAll) el.foldAll.addEventListener('click', toggleFoldAll);
 
   el.layoutToggle.addEventListener('click', function (e) {
     var btn = e.target.closest('.seg-btn');

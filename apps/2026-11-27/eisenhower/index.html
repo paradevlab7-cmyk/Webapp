@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0c120a">
+<title>아이젠하워 할 일 매트릭스 — 중요·긴급으로 오늘 할 일 정리</title>
+<meta name="description" content="할 일을 중요·긴급 두 가지 기준으로 네 칸에 나눠 보는 아이젠하워 매트릭스. 지금 할 일 추천, 사분면 이동, 완료율, 브라우저 저장.">
+<style>
+  [hidden]{display:none !important}
+  :root{
+    --bg:#0c120a; --bg2:#080c07; --card:#131b12; --card2:#0f1610;
+    --line:rgba(255,255,255,.085); --line2:rgba(255,255,255,.17);
+    --txt:#eaf2e6; --dim:#94a58c; --dim2:#6c7d66;
+    --a:#b6e36b; --a2:#8bc34a; --a-ink:#101a06;
+    --q1:#ff8a80; --q2:#b6e36b; --q3:#ffd479; --q4:#8fa3b8;
+    --bad:#fb7185;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{min-height:100vh;color:var(--txt);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(880px 440px at 4% -10%,rgba(182,227,107,.14),transparent 60%),
+      radial-gradient(720px 420px at 100% 2%,rgba(139,195,74,.10),transparent 58%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:960px;margin:0 auto;padding:22px 16px 64px}
+  a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--dim);
+    font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;background:rgba(255,255,255,.03);margin-bottom:18px}
+  a.back:hover{color:var(--txt);border-color:var(--line2)}
+  header h1{font-size:clamp(23px,5.2vw,31px);letter-spacing:-.9px;margin:0 0 6px}
+  header p{margin:0 0 18px;color:var(--dim);font-size:13.5px}
+
+  .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:16px;padding:16px;margin-bottom:13px}
+
+  .addrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+  #title{width:100%;min-width:0;padding:13px 15px;border-radius:12px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:var(--txt);font:inherit;font-size:14.5px;font-weight:600}
+  #title::placeholder{color:var(--dim2);font-weight:600}
+  #title:focus{outline:none;border-color:rgba(182,227,107,.6);box-shadow:0 0 0 3px rgba(182,227,107,.14)}
+  #addBtn{appearance:none;font:inherit;cursor:pointer;border:0;border-radius:12px;padding:0 20px;
+    background:linear-gradient(135deg,var(--a),var(--a2));color:var(--a-ink);font-size:14px;font-weight:900;
+    letter-spacing:-.2px;white-space:nowrap;transition:filter .15s,transform .12s}
+  #addBtn:hover{filter:brightness(1.05)}
+  #addBtn:active{transform:scale(.98)}
+  .flags{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px;align-items:center}
+  .flag{appearance:none;font:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:7px;
+    border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--dim);border-radius:999px;
+    padding:7px 12px;font-size:12.5px;font-weight:800;letter-spacing:-.2px;transition:background .15s,border-color .15s,color .15s}
+  .flag:hover{color:var(--txt);border-color:var(--line2)}
+  .flag .dot{width:9px;height:9px;border-radius:3px;background:rgba(255,255,255,.18);transition:background .15s}
+  .flag[aria-pressed="true"]{color:var(--txt);border-color:rgba(182,227,107,.45);background:rgba(182,227,107,.13)}
+  .flag[aria-pressed="true"] .dot{background:var(--a)}
+  .flag.imp[aria-pressed="true"]{border-color:rgba(182,227,107,.5)}
+  .flag.urg[aria-pressed="true"]{border-color:rgba(255,138,128,.5);background:rgba(255,138,128,.13)}
+  .flag.urg[aria-pressed="true"] .dot{background:var(--q1)}
+  .qhint{margin-left:auto;font-size:11.5px;font-weight:800;color:var(--dim2)}
+  .err{margin:8px 0 0;font-size:12.5px;font-weight:800;color:var(--bad)}
+
+  .summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+  .sum{background:rgba(255,255,255,.035);border:1px solid var(--line);border-radius:12px;padding:9px 11px;min-width:0}
+  .sum-k{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--dim2);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .sum-v{display:block;font-size:19px;font-weight:800;letter-spacing:-.4px;font-variant-numeric:tabular-nums}
+  .sum-v small{font-size:11px;color:var(--dim);font-weight:700;letter-spacing:0}
+  .progress{margin-top:11px}
+  .progress .bar{height:7px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden}
+  .progress .bar i{display:block;height:100%;width:0;border-radius:999px;
+    background:linear-gradient(90deg,var(--a),var(--a2));transition:width .3s}
+  .progress .cap{display:flex;justify-content:space-between;font-size:11.5px;color:var(--dim2);margin-top:5px;font-weight:700}
+
+  .next{margin-top:12px;padding:11px 13px;border-radius:12px;border:1px solid rgba(255,138,128,.32);
+    background:linear-gradient(135deg,rgba(255,138,128,.13),rgba(255,212,121,.05))}
+  .next-k{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#ffb3ab}
+  .next-v{font-size:14px;font-weight:800;letter-spacing:-.3px;overflow-wrap:anywhere}
+  .next-v span{color:var(--dim);font-weight:700;font-size:12px}
+
+  .filters{display:flex;gap:7px;flex-wrap:wrap;align-items:center;margin:4px 0 12px}
+  .fchip{appearance:none;font:inherit;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.03);
+    color:var(--dim);border-radius:999px;padding:6px 11px;font-size:12px;font-weight:800;
+    display:inline-flex;align-items:center;gap:6px;transition:background .15s,color .15s,border-color .15s}
+  .fchip:hover{color:var(--txt);border-color:var(--line2)}
+  .fchip[aria-pressed="true"]{background:rgba(182,227,107,.16);border-color:rgba(182,227,107,.45);color:#e8f8cf}
+  .fchip .n{font-variant-numeric:tabular-nums;color:var(--dim2);font-size:11px}
+  .fchip[aria-pressed="true"] .n{color:#cbe5a0}
+  .tools{margin-left:auto;display:flex;gap:6px}
+  .tools button{appearance:none;font:inherit;cursor:pointer;border:1px solid var(--line);
+    background:transparent;color:var(--dim2);border-radius:9px;padding:6px 10px;font-size:11.5px;font-weight:800}
+  .tools button:hover{color:var(--txt);border-color:var(--line2)}
+
+  .matrix{display:grid;gap:11px;grid-template-columns:1fr}
+  @media(min-width:760px){.matrix{grid-template-columns:1fr 1fr}}
+  .quad{border:1px solid var(--line);border-radius:15px;background:rgba(255,255,255,.022);
+    padding:12px;min-width:0;display:flex;flex-direction:column;gap:9px}
+  .quad.q1{box-shadow:inset 0 0 0 1px rgba(255,138,128,.13)}
+  .quad.q2{box-shadow:inset 0 0 0 1px rgba(182,227,107,.13)}
+  .quad.q3{box-shadow:inset 0 0 0 1px rgba(255,212,121,.13)}
+  .quad.q4{box-shadow:inset 0 0 0 1px rgba(143,163,184,.13)}
+  .qhead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:9px;align-items:center}
+  .qdot{width:26px;height:26px;border-radius:9px;display:grid;place-items:center;font-size:13px;font-weight:900}
+  .q1 .qdot{background:rgba(255,138,128,.18);color:#ffc4be}
+  .q2 .qdot{background:rgba(182,227,107,.18);color:#d3f2a0}
+  .q3 .qdot{background:rgba(255,212,121,.18);color:#ffe2a6}
+  .q4 .qdot{background:rgba(143,163,184,.18);color:#c8d6e4}
+  .qt{min-width:0}
+  .qt b{display:block;font-size:13.5px;letter-spacing:-.3px}
+  .qt span{display:block;font-size:11px;color:var(--dim2);font-weight:700;
+    overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qn{font-size:11.5px;font-weight:900;color:var(--dim);background:rgba(255,255,255,.06);
+    border-radius:999px;padding:2px 9px;font-variant-numeric:tabular-nums}
+  ul.tasks{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+  .task{border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.035);
+    padding:9px 10px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:start}
+  .task.done{opacity:.55;background:rgba(255,255,255,.015)}
+  .task.done .tt{text-decoration:line-through;color:var(--dim)}
+  .ck{appearance:none;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line2);
+    background:transparent;color:transparent;cursor:pointer;display:grid;place-items:center;
+    font-size:12px;font-weight:900;margin-top:1px;transition:background .15s,border-color .15s,color .15s}
+  .ck:hover{border-color:var(--a)}
+  .ck[aria-checked="true"]{background:var(--a);border-color:transparent;color:var(--a-ink)}
+  .tmain{min-width:0}
+  .tt{font-size:13.5px;font-weight:700;letter-spacing:-.2px;overflow-wrap:anywhere}
+  .tmeta{display:flex;gap:5px;flex-wrap:wrap;margin-top:3px}
+  .tg{font-size:10px;font-weight:900;letter-spacing:.02em;padding:1px 6px;border-radius:5px}
+  .tg.imp{background:rgba(182,227,107,.15);color:#cbe5a0}
+  .tg.urg{background:rgba(255,138,128,.15);color:#ffb8b1}
+  .tg.date{background:rgba(255,255,255,.06);color:var(--dim2)}
+  .tact{display:flex;gap:2px}
+  .tact button{appearance:none;border:0;background:transparent;color:var(--dim2);cursor:pointer;
+    border-radius:7px;width:26px;height:26px;display:grid;place-items:center;font-size:12px;font-weight:800}
+  .tact button:hover{background:rgba(255,255,255,.09);color:var(--txt)}
+  .tact button.del:hover{color:#ffb0b8}
+  .mv{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px;margin-top:7px;
+    grid-column:1 / -1}
+  .mv button{appearance:none;font:inherit;cursor:pointer;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);color:var(--dim);border-radius:8px;padding:6px 4px;
+    font-size:10.5px;font-weight:800;white-space:nowrap}
+  .mv button:hover{color:var(--txt);border-color:var(--line2)}
+  .mv button[disabled]{opacity:.4;cursor:default}
+  .qempty{font-size:12px;color:var(--dim2);text-align:center;padding:12px 6px;
+    border:1px dashed var(--line);border-radius:10px}
+
+  .legend{margin-top:16px;font-size:12px;color:var(--dim2);line-height:1.8}
+  .legend b{color:var(--dim)}
+  .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,14px);opacity:0;pointer-events:none;
+    background:#eaf2e6;color:#0c120a;font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:999px;
+    box-shadow:0 18px 40px -18px rgba(0,0,0,.8);transition:opacity .2s,transform .2s;z-index:50;max-width:calc(100vw - 32px)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../"><span aria-hidden="true">←</span> 오늘의 앱 3종</a>
+  <header>
+    <h1>아이젠하워 할 일 매트릭스</h1>
+    <p>중요한가, 긴급한가 — 두 질문으로 할 일을 네 칸에 나눠 오늘 할 것을 정합니다.</p>
+  </header>
+
+  <section class="panel">
+    <div class="addrow">
+      <input id="title" type="text" autocomplete="off" maxlength="120" aria-label="할 일"
+             placeholder="할 일을 적고 Enter — 예) 전기요금 자동이체 신청">
+      <button id="addBtn" type="button">추가</button>
+    </div>
+    <div class="flags">
+      <button class="flag imp" id="flagImp" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span>중요</button>
+      <button class="flag urg" id="flagUrg" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span>긴급</button>
+      <span class="qhint" id="qhint">→ 정리하기 칸</span>
+    </div>
+    <p class="err" id="errMsg" role="alert" hidden></p>
+  </section>
+
+  <section class="panel" aria-label="요약">
+    <div class="summary">
+      <div class="sum"><span class="sum-k">전체</span><span class="sum-v" id="sAll">0</span></div>
+      <div class="sum"><span class="sum-k">남은 일</span><span class="sum-v" id="sLeft">0</span></div>
+      <div class="sum"><span class="sum-k">완료</span><span class="sum-v" id="sDone">0</span></div>
+      <div class="sum"><span class="sum-k">완료율</span><span class="sum-v" id="sRate">0<small>%</small></span></div>
+    </div>
+    <div class="progress">
+      <div class="bar"><i id="progFill"></i></div>
+      <div class="cap"><span id="progCap">아직 할 일이 없어요</span><span id="progPct">0%</span></div>
+    </div>
+    <div class="next" id="nextBox" hidden>
+      <div class="next-k">지금 할 일</div>
+      <div class="next-v" id="nextTxt"></div>
+    </div>
+  </section>
+
+  <div class="filters">
+    <button class="fchip" type="button" data-f="all" aria-pressed="true">전체 <span class="n" id="nAll">0</span></button>
+    <button class="fchip" type="button" data-f="todo" aria-pressed="false">남은 일 <span class="n" id="nTodo">0</span></button>
+    <button class="fchip" type="button" data-f="done" aria-pressed="false">완료 <span class="n" id="nDone">0</span></button>
+    <div class="tools">
+      <button type="button" id="sampleBtn">예시 넣기</button>
+      <button type="button" id="clearDone">완료 지우기</button>
+    </div>
+  </div>
+
+  <div class="matrix" id="matrix"></div>
+
+  <p class="legend">
+    <b>1 즉시 하기</b> — 중요하고 긴급. 오늘 안에 끝내기 &nbsp;·&nbsp;
+    <b>2 계획하기</b> — 중요하지만 급하지 않음. 날짜를 정해 두기<br>
+    <b>3 위임·줄이기</b> — 긴급하지만 나에게 중요하지 않음. 넘기거나 줄이기 &nbsp;·&nbsp;
+    <b>4 정리하기</b> — 둘 다 아님. 버리거나 보류.<br>
+    모든 항목은 이 브라우저에만 저장됩니다.
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'eisenhower:v1';
+  var QUADS = [
+    { id: 1, name: '즉시 하기', sub: '중요 · 긴급', icon: '🔥', short: '즉시' },
+    { id: 2, name: '계획하기', sub: '중요 · 여유 있음', icon: '🌱', short: '계획' },
+    { id: 3, name: '위임·줄이기', sub: '긴급 · 덜 중요', icon: '📤', short: '위임' },
+    { id: 4, name: '정리하기', sub: '둘 다 아님', icon: '🗂️', short: '정리' }
+  ];
+
+  var S = { tasks: [], filter: 'all', seq: 1 };
+
+  var $ = function (s) { return document.querySelector(s); };
+  var titleEl = $('#title'), errEl = $('#errMsg'), matrixEl = $('#matrix'), toastEl = $('#toast');
+
+  /* ---------------------------------------------------------------- 저장 */
+  function load() {
+    var raw = null;
+    try { raw = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { raw = null; }
+    if (raw && Array.isArray(raw.tasks)) {
+      S.tasks = raw.tasks.filter(function (t) { return t && typeof t.title === 'string'; }).map(function (t) {
+        return {
+          id: Number(t.id) || 0, title: String(t.title), imp: !!t.imp, urg: !!t.urg,
+          done: !!t.done, q: Number(t.q) || 1, at: Number(t.at) || 0
+        };
+      });
+      S.seq = Math.max(1, Number(raw.seq) || 1);
+      S.tasks.forEach(function (t) { if (t.id >= S.seq) S.seq = t.id + 1; });
+      return true;
+    }
+    return false;
+  }
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ tasks: S.tasks, seq: S.seq }));
+    } catch (e) {}
+  }
+
+  function seed() {
+    var now = Date.now();
+    var demo = [
+      { t: '전기요금 자동이체 신청하기', imp: true, urg: true },
+      { t: '아이 학원 상담 일정 잡기', imp: true, urg: false },
+      { t: '단체방 공지 문자 돌리기', imp: false, urg: true },
+      { t: '밀린 드라마 정주행', imp: false, urg: false }
+    ];
+    demo.forEach(function (d, i) {
+      add({ title: d.t, imp: d.imp, urg: d.urg, silent: true, at: now - (demo.length - i) * 60000 });
+    });
+  }
+
+  /* ---------------------------------------------------------------- 계산 */
+  function quadOf(imp, urg) {
+    if (imp && urg) return 1;
+    if (imp) return 2;
+    if (urg) return 3;
+    return 4;
+  }
+  function quadLabel(q) {
+    for (var i = 0; i < QUADS.length; i++) if (QUADS[i].id === q) return QUADS[i];
+    return QUADS[0];
+  }
+  function uid() { return S.seq++; }
+
+  function add(o) {
+    var title = String(o && o.title != null ? o.title : '').trim().replace(/\s+/g, ' ');
+    if (!title) return { ok: false, msg: '할 일을 적어 주세요.' };
+    if (title.length > 120) title = title.slice(0, 120);
+    var imp = !!o.imp, urg = !!o.urg;
+    var t = { id: uid(), title: title, imp: imp, urg: urg, done: false,
+              q: quadOf(imp, urg), at: o.at || Date.now() };
+    S.tasks.push(t);
+    save();
+    render();
+    if (!o.silent) toast('추가했어요 — ' + quadLabel(t.q).name + ' 칸');
+    return { ok: true, task: { id: t.id, q: t.q, title: t.title } };
+  }
+
+  function find(id) {
+    for (var i = 0; i < S.tasks.length; i++) if (S.tasks[i].id === Number(id)) return S.tasks[i];
+    return null;
+  }
+
+  function toggle(id) {
+    var t = find(id);
+    if (!t) return { ok: false };
+    t.done = !t.done;
+    save(); render();
+    return { ok: true, done: t.done };
+  }
+
+  function move(id, q) {
+    var t = find(id);
+    q = Number(q);
+    if (!t || q < 1 || q > 4) return { ok: false };
+    t.q = q;
+    t.imp = (q === 1 || q === 2);
+    t.urg = (q === 1 || q === 3);
+    save(); render();
+    return { ok: true, q: q, imp: t.imp, urg: t.urg };
+  }
+
+  function remove(id) {
+    var i = -1;
+    for (var k = 0; k < S.tasks.length; k++) if (S.tasks[k].id === Number(id)) i = k;
+    if (i === -1) return { ok: false };
+    var t = S.tasks.splice(i, 1)[0];
+    save(); render();
+    return { ok: true, title: t.title };
+  }
+
+  function edit(id, title) {
+    var t = find(id);
+    var v = String(title == null ? '' : title).trim();
+    if (!t || !v) return { ok: false };
+    t.title = v.slice(0, 120);
+    save(); render();
+    return { ok: true, title: t.title };
+  }
+
+  function clearDone() {
+    var before = S.tasks.length;
+    S.tasks = S.tasks.filter(function (t) { return !t.done; });
+    var n = before - S.tasks.length;
+    save(); render();
+    return { ok: true, removed: n };
+  }
+
+  function stats() {
+    var total = S.tasks.length, done = 0, left = 0, per = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    S.tasks.forEach(function (t) {
+      per[t.q] = (per[t.q] || 0) + 1;
+      if (t.done) done++; else left++;
+    });
+    return { total: total, done: done, left: left, per: per,
+             rate: total ? Math.round(done / total * 100) : 0 };
+  }
+
+  /* ---------------------------------------------------------------- 렌더 */
+  function chosenQuad() {
+    return quadOf($('#flagImp').getAttribute('aria-pressed') === 'true',
+                  $('#flagUrg').getAttribute('aria-pressed') === 'true');
+  }
+
+  function renderHint() {
+    var q = quadLabel(chosenQuad());
+    $('#qhint').textContent = '→ ' + q.name + ' 칸';
+  }
+
+  function visibleTasks(q) {
+    return S.tasks.filter(function (t) {
+      if (t.q !== q) return false;
+      if (S.filter === 'todo') return !t.done;
+      if (S.filter === 'done') return t.done;
+      return true;
+    }).sort(function (a, b) {
+      if (a.done !== b.done) return a.done ? 1 : -1;
+      return b.at - a.at;
+    });
+  }
+
+  function taskHtml(t) {
+    var tags = '';
+    if (t.imp) tags += '<span class="tg imp">중요</span>';
+    if (t.urg) tags += '<span class="tg urg">긴급</span>';
+    var d = new Date(t.at);
+    if (t.at) {
+      tags += '<span class="tg date">' + (d.getMonth() + 1) + '/' + d.getDate() + ' 추가</span>';
+    }
+    var mv = QUADS.map(function (q) {
+      return '<button type="button" data-mv="' + q.id + '" data-id="' + t.id + '"' +
+        (q.id === t.q ? ' disabled aria-current="true"' : '') + '>' + q.short + '</button>';
+    }).join('');
+    return '<li class="task' + (t.done ? ' done' : '') + '" data-id="' + t.id + '" data-q="' + t.q + '">' +
+      '<button class="ck" type="button" data-ck="' + t.id + '" role="checkbox" aria-checked="' +
+        (t.done ? 'true' : 'false') + '" aria-label="' + (t.done ? '완료 취소' : '완료 처리') + '">✓</button>' +
+      '<div class="tmain"><div class="tt">' + esc(t.title) + '</div>' +
+        '<div class="tmeta">' + tags + '</div></div>' +
+      '<div class="tact">' +
+        '<button type="button" data-mvopen="' + t.id + '" aria-expanded="false" aria-label="다른 칸으로 옮기기" title="옮기기">⇄</button>' +
+        '<button type="button" class="del" data-del="' + t.id + '" aria-label="삭제" title="삭제">✕</button>' +
+      '</div>' +
+      '<div class="mv" id="mv-' + t.id + '" hidden>' + mv + '</div>' +
+    '</li>';
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function renderMatrix() {
+    matrixEl.innerHTML = QUADS.map(function (q) {
+      var arr = visibleTasks(q.id);
+      var all = S.tasks.filter(function (t) { return t.q === q.id; });
+      var body = arr.length
+        ? '<ul class="tasks">' + arr.map(taskHtml).join('') + '</ul>'
+        : '<p class="qempty">' + (all.length ? '조건에 맞는 항목이 없어요' : '아직 비어 있어요') + '</p>';
+      return '<section class="quad q' + q.id + '" data-quad="' + q.id + '" aria-label="' + q.name + '">' +
+        '<div class="qhead">' +
+          '<span class="qdot" aria-hidden="true">' + q.icon + '</span>' +
+          '<span class="qt"><b>' + q.id + '. ' + q.name + '</b><span>' + q.sub + '</span></span>' +
+          '<span class="qn">' + arr.length + '</span>' +
+        '</div>' + body + '</section>';
+    }).join('');
+  }
+
+  function renderSummary() {
+    var st = stats();
+    $('#sAll').textContent = st.total;
+    $('#sLeft').textContent = st.left;
+    $('#sDone').textContent = st.done;
+    $('#sRate').innerHTML = st.rate + '<small>%</small>';
+    $('#nAll').textContent = st.total;
+    $('#nTodo').textContent = st.left;
+    $('#nDone').textContent = st.done;
+    $('#progFill').style.width = st.rate + '%';
+    $('#progPct').textContent = st.rate + '%';
+    $('#progCap').textContent = st.total ? st.done + ' / ' + st.total + ' 완료' : '아직 할 일이 없어요';
+
+    document.querySelectorAll('.fchip').forEach(function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-f') === S.filter ? 'true' : 'false');
+    });
+
+    // 지금 할 일: 1칸 남은 항목 → 2칸 순으로
+    var pick = null;
+    [1, 2, 3].some(function (q) {
+      var cand = S.tasks.filter(function (t) { return t.q === q && !t.done; })
+        .sort(function (a, b) { return a.at - b.at; });
+      if (cand.length) { pick = { t: cand[0], q: q }; return true; }
+      return false;
+    });
+    $('#nextBox').hidden = !pick;
+    if (pick) {
+      $('#nextTxt').innerHTML = esc(pick.t.title) + ' <span>· ' + quadLabel(pick.q).name + '</span>';
+    }
+  }
+
+  function render() {
+    renderSummary();
+    renderMatrix();
+    renderHint();
+  }
+
+  /* ---------------------------------------------------------------- 이벤트 */
+  function doAdd() {
+    var imp = $('#flagImp').getAttribute('aria-pressed') === 'true';
+    var urg = $('#flagUrg').getAttribute('aria-pressed') === 'true';
+    var res = add({ title: titleEl.value, imp: imp, urg: urg });
+    if (!res.ok) {
+      errEl.textContent = res.msg;
+      errEl.hidden = false;
+      titleEl.focus();
+      return;
+    }
+    errEl.hidden = true;
+    titleEl.value = '';
+    titleEl.focus();
+  }
+
+  $('#addBtn').addEventListener('click', doAdd);
+  titleEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); doAdd(); }
+  });
+  titleEl.addEventListener('input', function () { errEl.hidden = true; });
+
+  ['flagImp', 'flagUrg'].forEach(function (id) {
+    $('#' + id).addEventListener('click', function () {
+      var on = this.getAttribute('aria-pressed') === 'true';
+      this.setAttribute('aria-pressed', on ? 'false' : 'true');
+      renderHint();
+    });
+  });
+
+  document.querySelector('.filters').addEventListener('click', function (e) {
+    var f = e.target.closest('.fchip');
+    if (f) { S.filter = f.getAttribute('data-f'); render(); return; }
+  });
+
+  $('#clearDone').addEventListener('click', function () {
+    var done = S.tasks.filter(function (t) { return t.done; }).length;
+    if (!done) { toast('지울 완료 항목이 없어요'); return; }
+    if (this.getAttribute('data-armed') !== '1') {
+      this.setAttribute('data-armed', '1');
+      this.textContent = '한 번 더 누르면 지워요';
+      var self = this;
+      setTimeout(function () {
+        if (self.getAttribute('data-armed') === '1') {
+          self.removeAttribute('data-armed');
+          self.textContent = '완료 지우기';
+        }
+      }, 4000);
+      return;
+    }
+    this.removeAttribute('data-armed');
+    this.textContent = '완료 지우기';
+    var res = clearDone();
+    toast(res.removed + '개를 지웠어요');
+  });
+
+  $('#sampleBtn').addEventListener('click', function () {
+    var have = {};
+    S.tasks.forEach(function (t) { have[t.title] = true; });
+    var demo = [
+      { t: '전기요금 자동이체 신청하기', imp: true, urg: true },
+      { t: '아이 학원 상담 일정 잡기', imp: true, urg: false },
+      { t: '단체방 공지 문자 돌리기', imp: false, urg: true },
+      { t: '밀린 드라마 정주행', imp: false, urg: false }
+    ];
+    var n = 0;
+    demo.forEach(function (d) {
+      if (have[d.t]) return;
+      add({ title: d.t, imp: d.imp, urg: d.urg, silent: true });
+      n++;
+    });
+    toast(n ? '예시 ' + n + '개를 넣었어요' : '예시는 이미 들어 있어요');
+  });
+
+  matrixEl.addEventListener('click', function (e) {
+    var ck = e.target.closest('[data-ck]');
+    if (ck) {
+      var r = toggle(ck.getAttribute('data-ck'));
+      if (r.ok) toast(r.done ? '완료로 옮겼어요' : '다시 남은 일로');
+      return;
+    }
+    var del = e.target.closest('[data-del]');
+    if (del) {
+      var d = remove(del.getAttribute('data-del'));
+      if (d.ok) toast('삭제했어요');
+      return;
+    }
+    var open = e.target.closest('[data-mvopen]');
+    if (open) {
+      var id = open.getAttribute('data-mvopen');
+      var box = document.getElementById('mv-' + id);
+      var show = box.hidden;
+      matrixEl.querySelectorAll('.mv').forEach(function (b) { b.hidden = true; });
+      matrixEl.querySelectorAll('[data-mvopen]').forEach(function (b) { b.setAttribute('aria-expanded', 'false'); });
+      box.hidden = !show;
+      open.setAttribute('aria-expanded', show ? 'true' : 'false');
+      return;
+    }
+    var mv = e.target.closest('[data-mv]');
+    if (mv && !mv.disabled) {
+      var res = move(mv.getAttribute('data-id'), mv.getAttribute('data-mv'));
+      if (res.ok) toast(quadLabel(res.q).name + ' 칸으로 옮겼어요');
+    }
+  });
+
+  // 더블클릭으로 이름 고치기
+  matrixEl.addEventListener('dblclick', function (e) {
+    var tt = e.target.closest('.tt');
+    if (!tt) return;
+    var li = tt.closest('.task');
+    var id = li.getAttribute('data-id');
+    var cur = find(id);
+    if (!cur) return;
+    var v = window.prompt('할 일 수정', cur.title);
+    if (v == null) return;
+    var r = edit(id, v);
+    if (r.ok) toast('수정했어요');
+  });
+
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  /* ---------------------------------------------------------------- 공개 API(검증용) */
+  window.Eisenhower = {
+    quads: function () { return QUADS.slice(); },
+    add: add,
+    toggle: toggle,
+    move: move,
+    remove: remove,
+    edit: edit,
+    clearDone: clearDone,
+    stats: stats,
+    quadOf: quadOf,
+    state: function () {
+      return { filter: S.filter, seq: S.seq, tasks: S.tasks.map(function (t) {
+        return { id: t.id, title: t.title, imp: t.imp, urg: t.urg, done: t.done, q: t.q, at: t.at };
+      }) };
+    },
+    setFilter: function (f) { S.filter = f; render(); }
+  };
+
+  var had = load();
+  if (!had) {
+    seed();
+    save();
+  }
+  render();
+  titleEl.focus();
+})();
+</script>
+</body>
+</html>
