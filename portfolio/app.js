@@ -678,10 +678,72 @@
     if (card) openModal(card.getAttribute('data-slug'));
   });
 
+  /* ---- 키보드 카드 탐색 (2026-11-28 개선) ----
+     카드에 포커스가 있을 때 ←/→/↑/↓ 로 이웃 카드, Home/End 로 처음·끝 카드로 이동한다.
+     날짜별 접힘 그룹처럼 화면에 보이지 않는 카드는 건너뛴다. */
+  var ARROW_DIR = { ArrowRight: 'right', ArrowLeft: 'left', ArrowUp: 'up', ArrowDown: 'down' };
+
+  function visibleCards() {
+    return Array.prototype.slice.call(el.grid.querySelectorAll('.card')).filter(function (c) {
+      return c.offsetParent !== null;
+    });
+  }
+
+  function focusCard(card) {
+    if (!card) return;
+    try { card.focus({ preventScroll: true }); } catch (e) { card.focus(); }
+    if (card.scrollIntoView) card.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }
+
+  function moveCardFocus(dir) {
+    var cards = visibleCards();
+    if (!cards.length) return false;
+    var active = document.activeElement;
+    var cur = active && active.closest ? active.closest('.card') : null;
+    var idx = cards.indexOf(cur);
+    if (idx === -1) { focusCard(cards[0]); return true; }
+    if (dir === 'left' || dir === 'right') {
+      var nxt = cards[idx + (dir === 'right' ? 1 : -1)];
+      if (nxt) { focusCard(nxt); return true; }
+      return false;
+    }
+    // 위/아래는 '지금 카드의 아래(위)에 있는 줄' 중 가장 가까운 카드로 — 세로 거리 위주, 가로 거리는 보정
+    // (카드 등장 애니메이션 중에도 같은 줄 카드를 고르지 않도록 카드 높이를 기준으로 줄을 나눈다)
+    var box = cur.getBoundingClientRect();
+    var best = null, bestScore = Infinity;
+    cards.forEach(function (c) {
+      if (c === cur) return;
+      var b = c.getBoundingClientRect();
+      if (dir === 'down' ? b.top < box.bottom - 8 : b.bottom > box.top + 8) return;
+      var dy = dir === 'down' ? b.top - box.top : box.top - b.top;
+      var score = Math.abs(dy) * 8 + Math.abs(b.left - box.left);
+      if (score < bestScore) { bestScore = score; best = c; }
+    });
+    if (best) { focusCard(best); return true; }
+    var fb = cards[idx + (dir === 'down' ? 1 : -1)];
+    if (fb) { focusCard(fb); return true; }
+    return false;
+  }
+
   el.grid.addEventListener('keydown', function (e) {
-    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
-    if (e.target.closest('.fav')) return;
     var card = e.target.closest('.card');
+    var fav = e.target.closest('.fav');
+    if (card && !e.altKey && !e.metaKey && !e.ctrlKey) {
+      if (ARROW_DIR[e.key] && moveCardFocus(ARROW_DIR[e.key])) {
+        e.preventDefault();
+        return;
+      }
+      if (e.key === 'Home' || e.key === 'End') {
+        var cards = visibleCards();
+        if (cards.length) {
+          focusCard(e.key === 'Home' ? cards[0] : cards[cards.length - 1]);
+          e.preventDefault();
+          return;
+        }
+      }
+    }
+    if (e.key !== 'Enter' && e.key !== ' ' && e.key !== 'Spacebar') return;
+    if (fav) return;
     if (!card) return;
     e.preventDefault();
     openModal(card.getAttribute('data-slug'));

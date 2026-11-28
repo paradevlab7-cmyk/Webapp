@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0e1116">
+<title>2026-11-28 웹앱 3종 — 연봉 실수령액 계산기 · 반응속도·기억력 테스트 · 마크다운 스튜디오</title>
+<meta name="description" content="4대보험과 소득세를 뺀 월 실수령액을 보여 주는 연봉 계산기, 반응속도와 순서 기억을 재는 두뇌 테스트, 마크다운을 쓰면 바로 문서가 되는 편집기 — 설치 없이 바로 쓰는 웹앱 3종.">
+<style>
+  :root{--bg:#0d1117;--card:#151b23;--line:rgba(255,255,255,.09);--txt:#e6edf3;--dim:#8b98a5;
+    --a:#5eead4;--v:#c4b5fd;--g:#f0abfc}
+  *{box-sizing:border-box}
+  body{margin:0;min-height:100vh;color:var(--txt);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:radial-gradient(1000px 500px at 8% -10%,rgba(94,234,212,.13),transparent 60%),
+      radial-gradient(900px 480px at 100% 0%,rgba(196,181,253,.14),transparent 58%),
+      radial-gradient(800px 460px at 50% 110%,rgba(240,171,252,.10),transparent 60%),
+      linear-gradient(180deg,#0d1117,#0a0e13);
+    -webkit-font-smoothing:antialiased;line-height:1.6}
+  .wrap{max-width:1000px;margin:0 auto;padding:34px 18px 66px}
+  .topline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:22px;flex-wrap:wrap}
+  .back{text-decoration:none;color:var(--dim);font-size:12.5px;font-weight:700;
+    border:1px solid var(--line);border-radius:999px;padding:6px 13px;background:rgba(255,255,255,.03)}
+  .back:hover{color:var(--txt);border-color:rgba(255,255,255,.24)}
+  .pf{text-decoration:none;font-size:12.5px;font-weight:800;color:#d7fbe8;
+    background:linear-gradient(120deg,rgba(94,233,166,.16),rgba(139,123,255,.18));
+    border:1px solid rgba(94,233,166,.34);border-radius:999px;padding:6px 13px}
+  h1{font-size:clamp(24px,5vw,34px);letter-spacing:-.9px;margin:0 0 6px}
+  .sub{color:var(--dim);font-size:14px;margin:0 0 26px}
+  .cards{display:grid;gap:14px}
+  @media(min-width:760px){.cards{grid-template-columns:repeat(3,1fr)}}
+  a.card{display:block;text-decoration:none;color:inherit;background:linear-gradient(180deg,#161d25,#131a21);
+    border:1px solid var(--line);border-radius:18px;padding:19px;
+    transition:transform .15s,border-color .15s,box-shadow .2s}
+  a.card:hover{transform:translateY(-3px);border-color:rgba(255,255,255,.22);box-shadow:0 20px 40px -26px #000}
+  .ico{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;font-size:22px;margin-bottom:12px}
+  .card h2{margin:0 0 4px;font-size:17px;letter-spacing:-.3px}
+  .tagline{color:var(--dim);font-size:13px;margin:0 0 12px;min-height:2.6em}
+  .feat{list-style:none;padding:0;margin:0 0 14px;font-size:12.5px;color:#b6c2ce;display:grid;gap:5px}
+  .feat li:before{content:"✓";color:var(--a);margin-right:6px;font-weight:700}
+  .card.v .feat li:before{color:var(--v)}
+  .card.g .feat li:before{color:var(--g)}
+  .go{font-size:13px;font-weight:800;color:var(--a)}
+  .card.v .go{color:#ddd6fe}
+  .card.g .go{color:var(--g)}
+  .note{margin-top:24px;font-size:12.5px;color:#6f7d8b;text-align:center;line-height:1.8}
+  .note code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-size:11.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="../../">← 전체 아카이브</a>
+    <a class="pf" href="../../portfolio/">✨ 포트폴리오</a>
+  </div>
+  <h1>오늘 만든 웹앱 3종</h1>
+  <p class="sub">2026-11-28 · 설치·로그인 없이 브라우저에서 바로 동작합니다. 모든 기록은 내 기기에만 저장됩니다.</p>
+  <div class="cards">
+    <a class="card" href="./salary-net/index.html">
+      <div class="ico" style="background:rgba(94,234,212,.16)">💰</div>
+      <h2>연봉 실수령액 계산기</h2>
+      <p class="tagline">4대보험과 소득세를 빼고, 통장에 들어오는 월 급여를 계산</p>
+      <ul class="feat">
+        <li>국민연금·건강·장기요양·고용보험 항목별 명세</li>
+        <li>부양가족 수 · 식대 비과세액 반영</li>
+        <li>연봉 인상 시뮬레이션 · 요율 직접 수정</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="card v" href="./brain-bench/index.html">
+      <div class="ico" style="background:rgba(196,181,253,.16)">⚡</div>
+      <h2>반응속도·기억력 테스트</h2>
+      <p class="tagline">초록불 반응속도 5회와 3×3 순서 기억으로 두뇌 점검</p>
+      <ul class="feat">
+        <li>성급한 클릭 감지 · 5회 평균 등급</li>
+        <li>2칸부터 시작하는 순서 기억 레벨</li>
+        <li>최고 기록 저장 · 두뇌 점수</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+    <a class="card g" href="./md-studio/index.html">
+      <div class="ico" style="background:rgba(240,171,252,.16)">📝</div>
+      <h2>마크다운 스튜디오</h2>
+      <p class="tagline">왼쪽에 마크다운을 쓰면 오른쪽에 바로 문서로</p>
+      <ul class="feat">
+        <li>제목·목록·표·코드·인용·링크 실시간 미리보기</li>
+        <li>제목에서 목차 자동 생성 · 서식 툴바</li>
+        <li>HTML·MD 내보내기 · 자동 저장</li>
+      </ul>
+      <span class="go">열어보기 →</span>
+    </a>
+  </div>
+  <p class="note">
+    순수 HTML/CSS/JS 단일 파일 · 외부 라이브러리·웹폰트 0개 · <code>localStorage</code>로만 저장<br>
+    앱 폴더: <code>salary-net/</code> · <code>brain-bench/</code> · <code>md-studio/</code>
+  </p>
+</div>
+</body>
+</html>

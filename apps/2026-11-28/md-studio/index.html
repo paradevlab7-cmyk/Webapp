@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d0b14">
+<title>마크다운 스튜디오 — 실시간 미리보기·HTML 내보내기</title>
+<meta name="description" content="왼쪽에 마크다운을 쓰면 오른쪽에 바로 문서로 보입니다. 제목·목록·표·코드·링크를 지원하고 목차 자동 생성, HTML·MD 내보내기, 자동 저장까지 브라우저 안에서 끝납니다.">
+<style>
+  [hidden]{display:none !important}
+  :root{
+    --bg:#0d0b14; --bg2:#09070f; --card:#161222; --card2:#120f1c;
+    --line:rgba(255,255,255,.09); --line2:rgba(255,255,255,.2);
+    --txt:#eeeaf7; --dim:#a29bb6; --dim2:#736d8a;
+    --a:#f0abfc; --a2:#e879f9; --a-ink:#2a0630;
+    --code:#c4b5fd; --warn:#fbbf24; --bad:#fb7185;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    min-height:100vh;color:var(--txt);line-height:1.65;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(900px 460px at 6% -8%,rgba(240,171,252,.14),transparent 62%),
+      radial-gradient(760px 420px at 100% 2%,rgba(196,181,253,.10),transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:22px 16px 56px}
+  .topline{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+  a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--dim);
+    font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;background:rgba(255,255,255,.03)}
+  a.back:hover{color:var(--txt);border-color:var(--line2)}
+  header h1{font-size:clamp(23px,5.4vw,31px);letter-spacing:-.9px;margin:0 0 6px}
+  header p{margin:0 0 18px;color:var(--dim);font-size:13.5px;max-width:70ch;word-break:keep-all}
+
+  /* ---------- 툴바 ---------- */
+  .toolbar{position:sticky;top:0;z-index:20;border:1px solid var(--line);border-radius:14px;
+    background:#141020;padding:8px;margin-bottom:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .tools{display:flex;gap:3px;flex-wrap:wrap;flex:1;min-width:0}
+  .tb{appearance:none;font:inherit;font-size:12px;font-weight:800;letter-spacing:-.1px;cursor:pointer;
+    color:var(--dim);border:1px solid transparent;background:transparent;border-radius:8px;padding:6px 8px;
+    white-space:nowrap;transition:background .13s,color .13s,border-color .13s}
+  .tb:hover{background:rgba(255,255,255,.07);color:var(--txt)}
+  .tb:active{transform:scale(.97)}
+  .tb b{font-weight:900}
+  .tb.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:11.5px}
+  .tsep{width:1px;align-self:stretch;background:var(--line);margin:2px 3px}
+  .viewseg{display:inline-flex;gap:2px;padding:3px;border:1px solid var(--line);border-radius:10px;
+    background:rgba(255,255,255,.03)}
+  .viewseg button{appearance:none;border:0;background:transparent;color:var(--dim);font:inherit;
+    font-size:11.5px;font-weight:800;padding:5px 10px;border-radius:7px;cursor:pointer;white-space:nowrap}
+  .viewseg button:hover{color:var(--txt);background:rgba(255,255,255,.07)}
+  .viewseg button[aria-pressed="true"]{background:rgba(240,171,252,.18);color:#fbe9ff;
+    box-shadow:inset 0 0 0 1px rgba(240,171,252,.4)}
+
+  /* ---------- 편집/미리보기 ---------- */
+  .studio{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--line);border-radius:var(--r);
+    overflow:hidden;background:linear-gradient(180deg,var(--card),var(--card2));min-height:520px}
+  .pane{display:flex;flex-direction:column;min-width:0;min-height:0}
+  .pane+.pane{border-left:1px solid var(--line)}
+  .pane-head{display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 12px;border-bottom:1px solid var(--line);background:rgba(255,255,255,.025);
+    font-size:11.5px;font-weight:800;color:var(--dim2);letter-spacing:.06em;text-transform:uppercase}
+  .pane-head .hint{font-size:11px;color:var(--dim2);font-weight:600;letter-spacing:0;text-transform:none}
+  #src{flex:1;width:100%;min-height:430px;border:0;background:transparent;color:#e9e4f5;resize:none;
+    padding:14px 16px;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"D2Coding",monospace;
+    font-size:13.5px;line-height:1.8;tab-size:2;outline:none}
+  #src::placeholder{color:var(--dim2)}
+  .preview{flex:1;padding:16px 18px;min-height:430px}
+  .studio[data-view="edit"]{grid-template-columns:1fr}
+  .studio[data-view="edit"] .pane-preview{display:none}
+  .studio[data-view="preview"]{grid-template-columns:1fr}
+  .studio[data-view="preview"] .pane-edit{display:none}
+  .studio[data-view="preview"] .preview{max-height:none}
+  @media(max-width:860px){
+    .toolbar{position:static}
+    .studio{grid-template-columns:1fr;min-height:0}
+    .pane+.pane{border-left:0;border-top:1px solid var(--line)}
+    #src{min-height:260px}
+    .preview{min-height:240px}
+  }
+
+  /* ---------- 미리보기 문서 스타일 ---------- */
+  .doc{font-size:14px;line-height:1.85;color:#eae5f5;overflow-wrap:break-word}
+  .doc>*:first-child{margin-top:0}
+  .doc h1{font-size:1.62em;letter-spacing:-.6px;margin:20px 0 10px;padding-bottom:7px;border-bottom:1px solid rgba(255,255,255,.12)}
+  .doc h2{font-size:1.32em;letter-spacing:-.4px;margin:22px 0 8px}
+  .doc h3{font-size:1.13em;margin:18px 0 6px;color:#f6e7ff}
+  .doc h4,.doc h5,.doc h6{font-size:1em;margin:14px 0 6px;color:#e0d7f0}
+  .doc p{margin:10px 0}
+  .doc ul,.doc ol{margin:8px 0;padding-left:22px}
+  .doc li{margin:3px 0}
+  .doc li.task{list-style:none;margin-left:-20px;display:flex;gap:7px;align-items:flex-start}
+  .doc li.task input{margin-top:5px;accent-color:#e879f9}
+  .doc li.task.done{color:var(--dim);text-decoration:line-through}
+  .doc blockquote{margin:12px 0;padding:8px 14px;border-left:3px solid rgba(240,171,252,.55);
+    background:rgba(240,171,252,.07);border-radius:0 10px 10px 0;color:#ded3ea}
+  .doc blockquote p{margin:4px 0}
+  .doc code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;
+    background:rgba(196,181,253,.15);color:#e6dcff;padding:1px 5px;border-radius:5px}
+  .doc pre{margin:12px 0;padding:12px 14px;border-radius:11px;background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.08);overflow:auto}
+  .doc pre code{background:none;padding:0;font-size:12.5px;line-height:1.7;color:#d8d1ea}
+  .doc pre[data-lang]:before{content:attr(data-lang);display:block;font-size:10px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--dim2);margin-bottom:6px}
+  .doc a{color:#f5c2ff;text-decoration:underline;text-underline-offset:2px}
+  .doc a:hover{color:#fce7ff}
+  .doc hr{border:0;height:1px;background:rgba(255,255,255,.14);margin:18px 0}
+  .doc img{max-width:100%;border-radius:10px}
+  .doc strong{color:#fff;font-weight:800}
+  .doc table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px;display:block;overflow-x:auto}
+  .doc th,.doc td{border:1px solid rgba(255,255,255,.13);padding:7px 10px;text-align:left}
+  .doc th{background:rgba(240,171,252,.1);font-weight:800;white-space:nowrap}
+  .doc tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+  .doc .flash{animation:flash 1.1s ease-out}
+  @keyframes flash{0%{background:rgba(240,171,252,.3)}100%{background:transparent}}
+  .doc .empty{color:var(--dim2);font-size:13px}
+
+  /* ---------- 목차 ---------- */
+  .tocbox{display:flex;gap:8px;align-items:flex-start;padding:10px 12px;border-bottom:1px solid var(--line);
+    background:rgba(255,255,255,.02)}
+  .toc-t{font-size:10.5px;font-weight:800;color:var(--dim2);letter-spacing:.08em;text-transform:uppercase;
+    padding-top:5px;white-space:nowrap}
+  .toc{display:flex;flex-wrap:wrap;gap:5px;min-width:0}
+  .toc a{font-size:11.5px;font-weight:700;color:#d9cfef;background:rgba(240,171,252,.1);
+    border:1px solid rgba(240,171,252,.22);border-radius:999px;padding:3px 9px;text-decoration:none;
+    max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .toc a:hover{background:rgba(240,171,252,.2);color:#fff}
+  .toc a.lv1{background:rgba(240,171,252,.2);font-weight:800}
+  .toc a.lv3{opacity:.85}
+  .toc .none{font-size:11.5px;color:var(--dim2);padding-top:4px}
+
+  /* ---------- 상태·통계 ---------- */
+  .statusbar{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    margin-top:10px;font-size:11.5px;color:var(--dim2);font-weight:700}
+  .counts{display:flex;gap:12px;flex-wrap:wrap}
+  .counts b{color:var(--txt);font-variant-numeric:tabular-nums;margin-left:3px}
+  .acts{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+  .btn{appearance:none;font:inherit;font-size:12px;font-weight:800;letter-spacing:-.2px;cursor:pointer;
+    border-radius:9px;padding:7px 11px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--txt);
+    transition:background .15s,border-color .15s}
+  .btn:hover{background:rgba(255,255,255,.1);border-color:var(--line2)}
+  .btn.primary{background:var(--a);border-color:transparent;color:var(--a-ink)}
+  .btn.primary:hover{background:#f6c8ff}
+  .btn.ghost{background:transparent;color:var(--dim)}
+  .btn.ghost:hover{color:var(--txt)}
+  .btn.danger{color:#ffc7cf;border-color:rgba(251,113,133,.4)}
+
+  .note{margin-top:18px;font-size:12px;color:var(--dim2);line-height:1.8;word-break:keep-all}
+  .note b{color:var(--dim)}
+  .note code{background:rgba(255,255,255,.07);padding:1px 5px;border-radius:5px;font-size:11px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);opacity:0;pointer-events:none;
+    background:#eeeaf7;color:#0d0b14;font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:999px;
+    box-shadow:0 18px 40px -18px rgba(0,0,0,.8);transition:opacity .2s,transform .2s;z-index:50;
+    max-width:calc(100vw - 32px)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topline">
+    <a class="back" href="../"><span aria-hidden="true">←</span> 오늘의 앱 3종</a>
+    <span style="font-size:11.5px;color:var(--dim2);font-weight:700" id="saveState">자동 저장 켜짐</span>
+  </div>
+  <header>
+    <h1>마크다운 스튜디오</h1>
+    <p>왼쪽에 마크다운을 쓰면 오른쪽에 <b>문서 모양 그대로</b> 나타납니다. 목차는 자동으로 만들어지고, 완성한 글은 HTML이나 <code>.md</code> 파일로 내려받아 그대로 쓸 수 있어요.</p>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="서식 도구">
+    <div class="tools">
+      <button class="tb" type="button" data-act="h1" title="제목 1"><b>H1</b></button>
+      <button class="tb" type="button" data-act="h2" title="제목 2"><b>H2</b></button>
+      <button class="tb" type="button" data-act="h3" title="제목 3"><b>H3</b></button>
+      <span class="tsep" aria-hidden="true"></span>
+      <button class="tb" type="button" data-act="bold" title="굵게 (Ctrl+B)"><b>B</b></button>
+      <button class="tb" type="button" data-act="italic" title="기울임 (Ctrl+I)"><i>I</i></button>
+      <button class="tb" type="button" data-act="strike" title="취소선"><s>S</s></button>
+      <button class="tb mono" type="button" data-act="code" title="인라인 코드">`코드`</button>
+      <span class="tsep" aria-hidden="true"></span>
+      <button class="tb" type="button" data-act="link" title="링크">링크</button>
+      <button class="tb" type="button" data-act="quote" title="인용">인용</button>
+      <button class="tb" type="button" data-act="ul" title="글머리 목록">• 목록</button>
+      <button class="tb" type="button" data-act="ol" title="번호 목록">1. 목록</button>
+      <button class="tb mono" type="button" data-act="table" title="표">표</button>
+      <button class="tb mono" type="button" data-act="pre" title="코드 블록">```</button>
+      <button class="tb mono" type="button" data-act="hr" title="구분선">―</button>
+    </div>
+    <div class="viewseg" role="group" aria-label="보기 방식">
+      <button type="button" data-view="edit" aria-pressed="false">편집</button>
+      <button type="button" data-view="split" aria-pressed="true">분할</button>
+      <button type="button" data-view="preview" aria-pressed="false">미리보기</button>
+    </div>
+  </div>
+
+  <div class="studio" id="studio" data-view="split">
+    <section class="pane pane-edit" aria-label="마크다운 편집">
+      <div class="pane-head"><span>Markdown</span><span class="hint">Tab은 두 칸 들여쓰기</span></div>
+      <textarea id="src" spellcheck="false" aria-label="마크다운 원고" placeholder="# 제목을 입력하세요&#10;&#10;- 목록도 되고&#10;- **굵게**도 됩니다"></textarea>
+    </section>
+    <section class="pane pane-preview" aria-label="미리보기">
+      <div class="pane-head"><span>Preview</span><span class="hint" id="docWords">0단어</span></div>
+      <div class="tocbox"><span class="toc-t">목차</span><nav class="toc" id="toc" aria-label="문서 목차"></nav></div>
+      <div class="preview" id="preview"><div class="doc" id="doc"></div></div>
+    </section>
+  </div>
+
+  <div class="statusbar">
+    <div class="counts">
+      <span>글자<b id="cChar">0</b></span>
+      <span>단어<b id="cWord">0</b></span>
+      <span>줄<b id="cLine">0</b></span>
+      <span>제목<b id="cHead">0</b></span>
+      <span>표<b id="cTable">0</b></span>
+    </div>
+    <div class="acts">
+      <button class="btn" type="button" id="copyMd">MD 복사</button>
+      <button class="btn" type="button" id="copyHtml">HTML 복사</button>
+      <button class="btn primary" type="button" id="exportHtml">HTML 저장</button>
+      <button class="btn" type="button" id="exportMd">.md 저장</button>
+      <button class="btn ghost" type="button" id="loadSample">샘플</button>
+      <button class="btn danger" type="button" id="clearDoc">비우기</button>
+    </div>
+  </div>
+
+  <p class="note">
+    <b>지원 문법</b> — <code>#</code> 제목(1~6) · <code>**굵게**</code> · <code>*기울임*</code> · <code>~~취소선~~</code> ·
+    <code>`코드`</code> · <code>```코드 블록```</code> · <code>&gt; 인용</code> · <code>- 목록</code> · <code>1. 번호 목록</code> ·
+    <code>- [x] 체크</code> · <code>| 표 |</code> · <code>[링크](주소)</code> · <code>![이미지](주소)</code> · <code>---</code> 구분선<br>
+    글은 이 브라우저에만 자동 저장되고 어디에도 전송되지 않습니다. 내보낸 HTML은 스타일을 포함한 한 파일이라 그대로 열어 쓸 수 있습니다.
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="text/plain" id="sampleDoc"># 오늘의 회의 노트
+
+> 2026년 11월 28일 · 웹앱 스튜디오 정기 회의
+
+## 결정한 것
+- **디자인 시스템** 정리: 색은 3가지, 글꼴은 2가지로
+- 배포는 매일 오전 10시, 하루 3개씩
+- [x] 포트폴리오 페이지 정리
+- [ ] 마케팅 문구 다듬기
+
+## 해야 할 일
+1. 새 앱 아이디어 3개 적기
+2. 사용자 피드백 반영하기
+3. 다음 주 회고 준비
+
+## 코드 조각
+```js
+const apps = ['마크다운', '반응속도', '연봉 계산'];
+console.log(apps.length);
+```
+
+## 참고 표
+| 항목 | 값 | 비고 |
+| --- | --- | --- |
+| 하루 제작 | 3개 | 매일 |
+| 외부 라이브러리 | 0개 | 순수 JS |
+
+자세한 내용은 [포트폴리오](https://paradevlab7-cmyk.github.io/Webapp/portfolio/)에서 확인하세요.</script>
+
+<script>
+(function () {
+  'use strict';
+
+  var KEY = 'mdstudio:v1';
+  var VIEW_KEY = 'mdstudio:view:v1';
+  var $ = function (s) { return document.querySelector(s); };
+
+  var srcEl = $('#src'), docEl = $('#doc'), tocEl = $('#toc'), previewEl = $('#preview');
+  var studioEl = $('#studio'), saveStateEl = $('#saveState'), toastEl = $('#toast');
+  var S = { view: 'split', lastToc: null, lastHtml: '' };
+  var saveTimer = null;
+
+  /* ================================================================ 마크다운 → HTML */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function plain(s) {
+    return String(s)
+      .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+      .replace(/[*_~`]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  function safeUrl(u) {
+    var v = u.trim();
+    if (/^(https?:\/\/|mailto:|\/|#)/i.test(v)) return v;
+    return '';
+  }
+
+  /** 인라인 서식: 굵게·기울임·취소선·코드·링크·이미지·자동 링크 */
+  function inline(raw) {
+    var s = esc(String(raw));
+    // 코드 스팬을 먼저 떼어 둔다 (안쪽은 다른 규칙을 적용하지 않는다)
+    var codes = [];
+    s = s.replace(/`([^`]+)`/g, function (_, c) {
+      codes.push(c);
+      return '\u0000' + (codes.length - 1) + '\u0000';
+    });
+    // 이미지
+    s = s.replace(/!\[([^\]]*)\]\(([^)\s]+)\)/g, function (m, alt, url) {
+      var u = safeUrl(url);
+      if (!u) return m;
+      return '<img src="' + u + '" alt="' + alt + '" loading="lazy">';
+    });
+    // 링크
+    s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, txt, url) {
+      var u = safeUrl(url);
+      if (!u) return txt;
+      return '<a href="' + u + '" target="_blank" rel="noopener">' + txt + '</a>';
+    });
+    // 굵게 / 기울임 / 취소선
+    s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+         .replace(/__([^_]+)__/g, '<strong>$1</strong>')
+         .replace(/~~([^~]+)~~/g, '<del>$1</del>')
+         .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+         .replace(/(^|[^_])_([^_\n]+)_/g, '$1<em>$2</em>');
+    // 맨 주소 자동 링크
+    s = s.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, function (m, pre, url) {
+      return pre + '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+    });
+    // 코드 스팬 복원
+    s = s.replace(/\u0000(\d+)\u0000/g, function (_, n) { return '<code>' + codes[Number(n)] + '</code>'; });
+    return s;
+  }
+
+  function isTableSep(line) {
+    var t = String(line).trim();
+    if (!t || t.indexOf('-') === -1) return false;
+    var cells = splitRow(t);
+    return cells.length > 0 && cells.every(function (c) { return /^:?-{2,}:?$/.test(c); });
+  }
+  function splitRow(row) {
+    var s = String(row).trim().replace(/^\|/, '').replace(/\|$/, '');
+    var cells = [], cur = '';
+    for (var i = 0; i < s.length; i++) {
+      var ch = s[i];
+      if (ch === '\\' && s[i + 1] === '|') { cur += '|'; i++; continue; }
+      if (ch === '|') { cells.push(cur.trim()); cur = ''; } else { cur += ch; }
+    }
+    cells.push(cur.trim());
+    return cells;
+  }
+
+  function isBlockStart(line) {
+    return /^\s*```/.test(line) || /^(#{1,6})\s+/.test(line) || /^\s*>\s?/.test(line) ||
+      /^\s*(?:[-*+]|\d+[.)])\s+/.test(line) || /^\s*([-*_])\s*\1\s*\1[\s\1]*$/.test(line);
+  }
+
+  var HEAD_RE = /^(#{1,6})\s+(.*)$/;
+
+  function render(src) {
+    var lines = String(src).replace(/\r\n?/g, '\n').split('\n');
+    var out = [], toc = [], tables = 0, i = 0, hIndex = 0;
+
+    while (i < lines.length) {
+      var line = lines[i];
+
+      if (/^\s*$/.test(line)) { i++; continue; }
+
+      // 코드 블록
+      var fence = line.match(/^\s*(```+)\s*([A-Za-z0-9+#._-]*)\s*$/);
+      if (fence) {
+        var buf = [];
+        i++;
+        while (i < lines.length && !/^\s*```+\s*$/.test(lines[i])) { buf.push(lines[i]); i++; }
+        if (i < lines.length) i++;
+        out.push('<pre class="code"' + (fence[2] ? ' data-lang="' + esc(fence[2]) + '"' : '') +
+          '><code>' + esc(buf.join('\n')) + '</code></pre>');
+        continue;
+      }
+
+      // 구분선
+      if (/^\s*([-*_])\s*\1\s*\1[\s\1]*$/.test(line)) { out.push('<hr>'); i++; continue; }
+
+      // 제목
+      var h = line.match(HEAD_RE);
+      if (h) {
+        var lv = h[1].length;
+        var text = h[2].replace(/\s+#+\s*$/, '').trim();
+        var id = 'sec-' + (++hIndex);
+        toc.push({ level: lv, text: plain(text), id: id });
+        out.push('<h' + lv + ' id="' + id + '">' + inline(text) + '</h' + lv + '>');
+        i++;
+        continue;
+      }
+
+      // 인용
+      if (/^\s*>\s?/.test(line)) {
+        var q = [];
+        while (i < lines.length && /^\s*>\s?/.test(lines[i])) { q.push(lines[i].replace(/^\s*>\s?/, '')); i++; }
+        out.push('<blockquote>' + render(q.join('\n')).html + '</blockquote>');
+        continue;
+      }
+
+      // 표
+      if (line.indexOf('|') !== -1 && i + 1 < lines.length && isTableSep(lines[i + 1])) {
+        var head = splitRow(line);
+        var sep = splitRow(lines[i + 1]);
+        var align = sep.map(function (c) {
+          var l = c.charAt(0) === ':', r = c.charAt(c.length - 1) === ':';
+          return l && r ? 'center' : r ? 'right' : l ? 'left' : '';
+        });
+        i += 2;
+        var body = [];
+        while (i < lines.length && lines[i].trim() !== '' && lines[i].indexOf('|') !== -1) {
+          body.push(splitRow(lines[i]));
+          i++;
+        }
+        var cell = function (tag, c, k) {
+          return '<' + tag + (align[k] ? ' style="text-align:' + align[k] + '"' : '') + '>' + inline(c) + '</' + tag + '>';
+        };
+        var html = '<table><thead><tr>' + head.map(function (c, k) { return cell('th', c, k); }).join('') +
+          '</tr></thead><tbody>' + body.map(function (row) {
+            var cells = head.map(function (_, k) { return row[k] == null ? '' : row[k]; });
+            return '<tr>' + cells.map(function (c, k) { return cell('td', c, k); }).join('') + '</tr>';
+          }).join('') + '</tbody></table>';
+        out.push(html);
+        tables++;
+        continue;
+      }
+
+      // 목록
+      var listM = line.match(/^\s*(?:([-*+])|(\d+)[.)])\s+(.*)$/);
+      if (listM) {
+        var ordered = !!listM[2];
+        var startAt = ordered ? parseInt(listM[2], 10) : 1;
+        var items = [];
+        while (i < lines.length) {
+          var m = lines[i].match(/^\s*(?:([-*+])|(\d+)[.)])\s+(.*)$/);
+          if (!m) break;
+          if (!!m[2] !== ordered) break;
+          var content = m[3], task = null;
+          var tm = content.match(/^\[([ xX])\]\s+(.*)$/);
+          if (tm) { task = tm[1].toLowerCase() === 'x'; content = tm[2]; }
+          i++;
+          var extra = [];
+          while (i < lines.length && /^\s{2,}\S/.test(lines[i]) && !isBlockStart(lines[i].trim())) {
+            extra.push(lines[i].trim());
+            i++;
+          }
+          var bodyTxt = inline(content) + (extra.length ? ' ' + extra.map(inline).join(' ') : '');
+          if (task !== null) {
+            items.push('<li class="task' + (task ? ' done' : '') + '"><input type="checkbox" disabled' +
+              (task ? ' checked' : '') + '><span>' + bodyTxt + '</span></li>');
+          } else {
+            items.push('<li>' + bodyTxt + '</li>');
+          }
+          while (i < lines.length && /^\s*$/.test(lines[i])) break;
+        }
+        out.push(ordered
+          ? '<ol' + (startAt !== 1 ? ' start="' + startAt + '"' : '') + '>' + items.join('') + '</ol>'
+          : '<ul>' + items.join('') + '</ul>');
+        continue;
+      }
+
+      // 문단
+      var para = [];
+      while (i < lines.length && lines[i].trim() !== '' && !isBlockStart(lines[i]) &&
+             !(lines[i].indexOf('|') !== -1 && i + 1 < lines.length && isTableSep(lines[i + 1]))) {
+        para.push(lines[i]);
+        i++;
+      }
+      if (!para.length) { i++; continue; }
+      out.push('<p>' + para.map(function (l) { return inline(l.trim()); }).join('<br>') + '</p>');
+    }
+
+    return { html: out.join('\n'), toc: toc, tables: tables };
+  }
+
+  /* ================================================================ 화면 */
+  function stats() {
+    var text = srcEl.value;
+    var codePoints = Array.from(text).length;
+    var words = text.trim() ? text.trim().split(/\s+/).filter(Boolean).length : 0;
+    var lines = text === '' ? 0 : text.split('\n').length;
+    return { chars: codePoints, words: words, lines: lines };
+  }
+
+  function renderToc(toc) {
+    if (!toc.length) { tocEl.innerHTML = '<span class="none">제목(#)을 넣으면 목차가 생깁니다</span>'; return; }
+    tocEl.innerHTML = toc.map(function (t) {
+      return '<a class="lv' + t.level + '" href="#' + t.id + '" data-anchor="' + t.id + '">' +
+        esc(t.text || '(제목)') + '</a>';
+    }).join('');
+  }
+
+  function renderDoc() {
+    var r = render(srcEl.value);
+    S.lastHtml = r.html;
+    if (!srcEl.value.trim()) {
+      docEl.innerHTML = '<p class="empty">왼쪽에 글을 쓰면 여기에 바로 보입니다.</p>';
+    } else {
+      docEl.innerHTML = r.html;
+    }
+    renderToc(r.toc);
+    var st = stats();
+    $('#cChar').textContent = st.chars;
+    $('#cWord').textContent = st.words;
+    $('#cLine').textContent = st.lines;
+    $('#cHead').textContent = r.toc.length;
+    $('#cTable').textContent = r.tables;
+    $('#docWords').textContent = st.words + '단어';
+    S.toc = r.toc;
+  }
+
+  function applyView() {
+    studioEl.dataset.view = S.view;
+    Array.prototype.forEach.call(document.querySelectorAll('.viewseg button'), function (b) {
+      b.setAttribute('aria-pressed', b.getAttribute('data-view') === S.view ? 'true' : 'false');
+    });
+  }
+
+  function setView(v) {
+    S.view = ['edit', 'split', 'preview'].indexOf(v) === -1 ? 'split' : v;
+    applyView();
+    try { localStorage.setItem(VIEW_KEY, S.view); } catch (e) {}
+    if (S.view !== 'preview') {
+      try { srcEl.focus({ preventScroll: true }); } catch (e) {}
+    }
+  }
+
+  /* ================================================================ 저장 */
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ text: srcEl.value, savedAt: Date.now() }));
+      saveStateEl.textContent = '저장됨 · ' + new Date().toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {}
+  }
+  function scheduleSave() {
+    saveStateEl.textContent = '저장 중…';
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(save, 220);
+  }
+
+  /* ================================================================ 편집 동작 */
+  function replaceRange(start, end, text, caret) {
+    var v = srcEl.value;
+    srcEl.value = v.slice(0, start) + text + v.slice(end);
+    var pos = caret == null ? start + text.length : caret;
+    srcEl.focus();
+    srcEl.setSelectionRange(pos, pos);
+    onInput();
+  }
+  function selected() {
+    return { start: srcEl.selectionStart || 0, end: srcEl.selectionEnd || 0, text: srcEl.value.slice(srcEl.selectionStart || 0, srcEl.selectionEnd || 0) };
+  }
+  function wrapSel(before, after, placeholder) {
+    var s = selected();
+    var inner = s.text || placeholder || '';
+    replaceRange(s.start, s.end, before + inner + after, s.start + before.length + inner.length);
+  }
+  function prefixLines(prefix, numbered) {
+    var s = selected();
+    var v = srcEl.value;
+    var lineStart = v.lastIndexOf('\n', s.start - 1) + 1;
+    var lineEnd = v.indexOf('\n', s.end);
+    if (lineEnd === -1) lineEnd = v.length;
+    var block = v.slice(lineStart, lineEnd);
+    var lines = block.split('\n');
+    var allHave = lines.every(function (l) { return l.indexOf(prefix) === 0; });
+    var outLines = lines.map(function (l, k) {
+      if (allHave) return l.slice(prefix.length);
+      if (numbered) return (k + 1) + '. ' + l;
+      return prefix + l;
+    });
+    var text = outLines.join('\n');
+    replaceRange(lineStart, lineEnd, text, lineStart + text.length);
+  }
+
+  function insertBlock(text) {
+    var s = selected();
+    var v = srcEl.value;
+    var needNl = s.start > 0 && v.charAt(s.start - 1) !== '\n';
+    var body = (needNl ? '\n' : '') + text + '\n';
+    replaceRange(s.start, s.end, body, s.start + body.length);
+  }
+
+  var ACTIONS = {
+    h1: function () { prefixLines('# '); },
+    h2: function () { prefixLines('## '); },
+    h3: function () { prefixLines('### '); },
+    bold: function () { wrapSel('**', '**', '굵은 글자'); },
+    italic: function () { wrapSel('*', '*', '기울임'); },
+    strike: function () { wrapSel('~~', '~~', '취소선'); },
+    code: function () { wrapSel('`', '`', '코드'); },
+    link: function () {
+      var s = selected();
+      wrapSel('[', '](https://)', s.text || '링크 텍스트');
+    },
+    quote: function () { prefixLines('> '); },
+    ul: function () { prefixLines('- '); },
+    ol: function () { prefixLines('1', true); },
+    table: function () { insertBlock('| 항목 | 값 |\n| --- | --- |\n|  |  |'); },
+    pre: function () { insertBlock('```js\n// 코드를 입력하세요\n```'); },
+    hr: function () { insertBlock('---'); }
+  };
+
+  /* ================================================================ 내보내기 */
+  var EXPORT_CSS = [
+    'body{margin:0;padding:40px 20px;background:#fff;color:#1b1a22;',
+    'font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic","Segoe UI",Roboto,sans-serif;line-height:1.8}',
+    'main{max-width:760px;margin:0 auto}',
+    'h1{font-size:2em;letter-spacing:-.6px;border-bottom:1px solid #e5e2ee;padding-bottom:10px}',
+    'h2{font-size:1.45em;margin-top:1.6em}h3{font-size:1.2em}',
+    'blockquote{margin:16px 0;padding:8px 16px;border-left:3px solid #c9b6ff;background:#f7f4ff;color:#4a4560}',
+    'code{font-family:ui-monospace,Menlo,Consolas,monospace;background:#f2f0f8;padding:1px 5px;border-radius:4px;font-size:.9em}',
+    'pre{background:#1d1b26;color:#e9e5f5;padding:14px 16px;border-radius:10px;overflow:auto}',
+    'pre code{background:none;color:inherit;padding:0}',
+    'table{width:100%;border-collapse:collapse;margin:16px 0;font-size:.95em}',
+    'th,td{border:1px solid #ddd9e8;padding:8px 10px;text-align:left}th{background:#f6f3ff}',
+    'a{color:#7c3aed}img{max-width:100%;border-radius:8px}hr{border:0;height:1px;background:#e5e2ee;margin:24px 0}',
+    'li.task{list-style:none;margin-left:-20px}.li.task input{margin-right:6px}'
+  ].join('');
+
+  function fullHtml() {
+    var r = render(srcEl.value);
+    var h1 = (srcEl.value.match(/^#\s+(.+)$/m) || [])[1];
+    var title = plain(h1 || 'Markdown 문서');
+    return '<!DOCTYPE html>\n<html lang="ko">\n<head>\n<meta charset="utf-8">\n' +
+      '<meta name="viewport" content="width=device-width, initial-scale=1">\n' +
+      '<title>' + esc(title) + '</title>\n<style>' + EXPORT_CSS + '</style>\n</head>\n<body>\n<main>\n' +
+      r.html + '\n</main>\n</body>\n</html>\n';
+  }
+
+  function download(name, text, mime) {
+    var blob = new Blob([text], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () {
+      URL.revokeObjectURL(url);
+      if (a.parentNode) a.parentNode.removeChild(a);
+    }, 400);
+    return name;
+  }
+  function stamp() {
+    var d = new Date();
+    var p = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes());
+  }
+
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(text); });
+    }
+    return Promise.resolve(fallback(text));
+  }
+  function fallback(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+
+  /* ================================================================ 이벤트 */
+  function onInput() {
+    renderDoc();
+    scheduleSave();
+  }
+  srcEl.addEventListener('input', onInput);
+
+  srcEl.addEventListener('keydown', function (e) {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      replaceRange(srcEl.selectionStart, srcEl.selectionEnd, '  ', srcEl.selectionStart + 2);
+      return;
+    }
+    var meta = e.metaKey || e.ctrlKey;
+    if (meta && !e.shiftKey && (e.key === 'b' || e.key === 'B')) { e.preventDefault(); ACTIONS.bold(); return; }
+    if (meta && !e.shiftKey && (e.key === 'i' || e.key === 'I')) { e.preventDefault(); ACTIONS.italic(); return; }
+    if (meta && e.key === 'Enter') { e.preventDefault(); renderDoc(); toast('미리보기를 갱신했어요'); }
+  });
+
+  document.querySelector('.tools').addEventListener('click', function (e) {
+    var b = e.target.closest('.tb');
+    if (!b) return;
+    var act = b.getAttribute('data-act');
+    if (ACTIONS[act]) ACTIONS[act]();
+  });
+
+  document.querySelector('.viewseg').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-view]');
+    if (!b) return;
+    setView(b.getAttribute('data-view'));
+  });
+
+  tocEl.addEventListener('click', function (e) {
+    var a = e.target.closest('a[data-anchor]');
+    if (!a) return;
+    e.preventDefault();
+    var id = a.getAttribute('data-anchor');
+    S.lastToc = id;
+    var target = docEl.querySelector('#' + id);
+    if (target) {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      target.classList.remove('flash');
+      void target.offsetWidth;
+      target.classList.add('flash');
+    }
+  });
+
+  $('#copyMd').addEventListener('click', function () {
+    copyText(srcEl.value).then(function (ok) { toast(ok ? '마크다운을 복사했어요' : '복사에 실패했어요'); });
+  });
+  $('#copyHtml').addEventListener('click', function () {
+    copyText(S.lastHtml || render(srcEl.value).html)
+      .then(function (ok) { toast(ok ? 'HTML을 복사했어요' : '복사에 실패했어요'); });
+  });
+  $('#exportHtml').addEventListener('click', function () {
+    var name = download('document-' + stamp() + '.html', fullHtml(), 'text/html;charset=utf-8');
+    toast(name + ' 저장');
+  });
+  $('#exportMd').addEventListener('click', function () {
+    var name = download('note-' + stamp() + '.md', srcEl.value, 'text/markdown;charset=utf-8');
+    toast(name + ' 저장');
+  });
+  $('#loadSample').addEventListener('click', function () {
+    srcEl.value = sampleText();
+    onInput();
+    toast('샘플 문서를 불러왔어요');
+  });
+
+  var clearArmed = false, clearTimer = null;
+  $('#clearDoc').addEventListener('click', function () {
+    var btn = $('#clearDoc');
+    if (clearArmed) {
+      srcEl.value = '';
+      onInput();
+      save();
+      clearArmed = false;
+      clearTimeout(clearTimer);
+      btn.textContent = '비우기';
+      toast('문서를 비웠어요');
+      return;
+    }
+    clearArmed = true;
+    btn.textContent = '한 번 더 누르면 비움';
+    clearTimer = setTimeout(function () { clearArmed = false; btn.textContent = '비우기'; }, 3000);
+  });
+
+  window.addEventListener('beforeunload', function () { clearTimeout(saveTimer); save(); });
+
+  function sampleText() {
+    var raw = document.getElementById('sampleDoc').textContent || '';
+    return raw.replace(/^\n/, '').replace(/\s+$/, '') + '\n';
+  }
+
+  /* ================================================================ 시작 */
+  function init() {
+    var view = 'split';
+    try { view = localStorage.getItem(VIEW_KEY) || 'split'; } catch (e) {}
+    S.view = ['edit', 'split', 'preview'].indexOf(view) === -1 ? 'split' : view;
+    applyView();
+
+    var saved = null;
+    try { saved = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) {}
+    if (saved && typeof saved.text === 'string' && saved.text !== '') {
+      srcEl.value = saved.text;
+      saveStateEl.textContent = '저장된 글을 불러왔어요 · 자동 저장 켜짐';
+    } else {
+      srcEl.value = sampleText();
+      saveStateEl.textContent = '자동 저장 켜짐';
+    }
+    renderDoc();
+  }
+  init();
+
+  /* ================================================================ 공개 API */
+  window.MDStudio = {
+    get: function () { return srcEl.value; },
+    set: function (text) { srcEl.value = text == null ? '' : String(text); onInput(); save(); return stats(); },
+    html: function () { return render(srcEl.value).html; },
+    fullHtml: fullHtml,
+    stats: function () {
+      var r = render(srcEl.value);
+      var st = stats();
+      return { chars: st.chars, words: st.words, lines: st.lines, headings: r.toc.length,
+        tables: r.tables, toc: r.toc };
+    },
+    toc: function () { return render(srcEl.value).toc; },
+    sample: sampleText,
+    view: function () { return S.view; },
+    setView: setView,
+    lastToc: function () { return S.lastToc; },
+    select: function (a, b) {
+      srcEl.focus();
+      srcEl.setSelectionRange(a, b == null ? a : b);
+      return { start: srcEl.selectionStart, end: srcEl.selectionEnd };
+    },
+    actions: function () { return Object.keys(ACTIONS); },
+    esc: esc
+  };
+})();
+</script>
+</body>
+</html>

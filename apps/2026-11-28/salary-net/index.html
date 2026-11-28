@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#08120f">
+<title>연봉 실수령액 계산기 — 4대보험·소득세 공제 후 월 급여</title>
+<meta name="description" content="연봉과 부양가족 수·비과세액을 넣으면 국민연금·건강보험·장기요양·고용보험과 소득세·지방소득세를 계산해 월 실수령액을 보여 줍니다. 항목별 명세와 연봉 인상 시뮬레이션까지.">
+<style>
+  [hidden]{display:none !important}
+  :root{
+    --bg:#08120f; --bg2:#060d0b; --card:#0f1c18; --card2:#0c1714;
+    --line:rgba(255,255,255,.085); --line2:rgba(255,255,255,.18);
+    --txt:#e6f4ef; --dim:#8fa9a1; --dim2:#647c74;
+    --a:#5eead4; --a2:#2dd4bf; --a-ink:#03211c;
+    --warn:#fbbf24; --bad:#fb7185;
+    --r:16px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{
+    min-height:100vh;color:var(--txt);line-height:1.6;
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Malgun Gothic","Segoe UI",Roboto,sans-serif;
+    background:
+      radial-gradient(900px 460px at 8% -8%,rgba(94,234,212,.15),transparent 62%),
+      radial-gradient(760px 420px at 100% 2%,rgba(45,212,191,.10),transparent 60%),
+      linear-gradient(180deg,var(--bg),var(--bg2));
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1040px;margin:0 auto;padding:22px 16px 64px}
+  a.back{display:inline-flex;align-items:center;gap:6px;text-decoration:none;color:var(--dim);
+    font-size:12.5px;font-weight:700;border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;background:rgba(255,255,255,.03);margin-bottom:18px}
+  a.back:hover{color:var(--txt);border-color:var(--line2)}
+  header h1{font-size:clamp(23px,5.4vw,32px);letter-spacing:-.9px;margin:0 0 6px}
+  header p{margin:0 0 22px;color:var(--dim);font-size:13.5px;max-width:62ch}
+
+  .cols{display:grid;gap:14px}
+  @media(min-width:900px){
+    .cols{grid-template-columns:minmax(0,1fr) minmax(0,1.05fr);
+      grid-template-areas:"in res" "sim res";align-items:start}
+    .p-in{grid-area:in} .p-sim{grid-area:sim} .p-res{grid-area:res}
+  }
+  .panel{min-width:0}
+  .panel{background:linear-gradient(180deg,var(--card),var(--card2));border:1px solid var(--line);
+    border-radius:var(--r);padding:16px}
+  .panel h2{margin:0 0 12px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim2)}
+
+  .field{margin-bottom:16px}
+  .field:last-child{margin-bottom:0}
+  .field-label{display:block;font-size:12.5px;font-weight:800;color:var(--dim);margin:0 0 7px}
+  .field-label b{color:var(--txt)}
+  .field-label span{color:var(--dim2);font-weight:600;font-size:11.5px;margin-left:6px}
+  .inrow{display:flex;align-items:center;gap:8px}
+  .inbox{position:relative;flex:1;min-width:0}
+  .inbox input{width:100%;padding:13px 44px 13px 14px;border-radius:12px;border:1px solid var(--line);
+    background:rgba(255,255,255,.04);color:var(--txt);font-size:19px;font-weight:800;
+    font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+  .inbox input:focus{outline:none;border-color:rgba(94,234,212,.6);box-shadow:0 0 0 3px rgba(94,234,212,.14)}
+  .inbox .unit{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--dim2);
+    font-size:13px;font-weight:800;pointer-events:none}
+  .stepper{display:flex;align-items:center;gap:6px}
+  .stepper button{appearance:none;width:42px;height:44px;border-radius:11px;border:1px solid var(--line);
+    background:rgba(255,255,255,.05);color:var(--txt);font-size:17px;font-weight:800;cursor:pointer}
+  .stepper button:hover{border-color:var(--line2);background:rgba(255,255,255,.09)}
+  .stepper button:disabled{opacity:.35;cursor:not-allowed}
+  .stepper .val{flex:1;text-align:center;font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;
+    border:1px solid var(--line);border-radius:11px;background:rgba(255,255,255,.03);padding:10px 0}
+
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .chip{appearance:none;font:inherit;font-size:12px;font-weight:800;cursor:pointer;color:var(--dim);
+    border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:999px;padding:5px 11px;
+    transition:color .15s,border-color .15s,background .15s}
+  .chip:hover{color:var(--txt);border-color:var(--line2)}
+  .chip[aria-pressed="true"]{background:rgba(94,234,212,.16);border-color:rgba(94,234,212,.5);color:#d6fff7}
+
+  .hero{border-radius:14px;padding:16px;border:1px solid rgba(94,234,212,.28);
+    background:linear-gradient(135deg,rgba(94,234,212,.15),rgba(45,212,191,.05));margin-bottom:12px}
+  .hero-k{display:block;font-size:12px;color:#9fded3;font-weight:700;margin-bottom:2px}
+  .hero-v{display:block;font-size:clamp(28px,7.4vw,40px);font-weight:800;letter-spacing:-1.4px;
+    font-variant-numeric:tabular-nums;line-height:1.2;overflow-wrap:anywhere}
+  .hero-v small{font-size:15px;font-weight:700;color:var(--dim);letter-spacing:0;margin-left:4px}
+  .hero-sub{margin:6px 0 0;font-size:12.5px;color:var(--dim)}
+  .hero-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;padding-top:13px;
+    border-top:1px solid rgba(94,234,212,.2)}
+  .minik{display:block;font-size:11px;color:var(--dim2);font-weight:700}
+  .miniv{display:block;font-size:16px;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.3px}
+  .hero-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+
+  .btn{appearance:none;font:inherit;font-size:12.5px;font-weight:800;letter-spacing:-.2px;cursor:pointer;
+    border-radius:10px;padding:9px 13px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:var(--txt);
+    transition:background .15s,border-color .15s,transform .12s}
+  .btn:hover{background:rgba(255,255,255,.09);border-color:var(--line2)}
+  .btn:active{transform:scale(.985)}
+  .btn.primary{background:var(--a);border-color:transparent;color:var(--a-ink)}
+  .btn.primary:hover{background:#8df3e2}
+  .btn.ghost{background:transparent;color:var(--dim)}
+  .btn.ghost:hover{color:var(--txt)}
+
+  ul.rows{list-style:none;margin:0;padding:0;display:grid;gap:2px}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:4px 10px;
+    padding:8px 4px;border-bottom:1px dashed rgba(255,255,255,.06)}
+  .row:last-child{border-bottom:0}
+  .row .rn{font-size:12.5px;font-weight:700;color:var(--txt);min-width:0}
+  .row .rn i{font-style:normal;color:var(--dim2);font-size:11px;margin-left:5px}
+  .row .rv{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+  .row .bar{grid-column:1 / -1;height:4px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
+  .row .bar span{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--a2),var(--a))}
+  .row.tax .bar span{background:linear-gradient(90deg,#fbbf24,#f59e0b)}
+  .row.total{border-top:1px solid var(--line);border-bottom:0;margin-top:4px;padding-top:10px}
+  .row.total .rn{font-weight:800}
+  .row.total .rv{color:var(--a);font-size:15px}
+
+  details{background:rgba(255,255,255,.025);border:1px solid var(--line);border-radius:12px;
+    padding:0 12px;margin-top:12px}
+  details+details{margin-top:8px}
+  summary{cursor:pointer;list-style:none;font-size:12.5px;font-weight:800;color:var(--dim);
+    padding:11px 0;display:flex;align-items:center;gap:8px}
+  summary::-webkit-details-marker{display:none}
+  summary::before{content:"⌄";display:inline-block;transition:transform .18s;color:var(--dim2);font-weight:800}
+  details[open] summary::before{transform:rotate(180deg)}
+  summary:hover{color:var(--txt)}
+  .dl{display:grid;gap:0;padding-bottom:10px}
+  .dl .d{display:flex;justify-content:space-between;gap:12px;font-size:12.5px;padding:5px 0;
+    border-bottom:1px dashed rgba(255,255,255,.06)}
+  .dl .d:last-child{border-bottom:0}
+  .dl .d span:first-child{color:var(--dim)}
+  .dl .d b{font-variant-numeric:tabular-nums;font-weight:800}
+
+  .rate-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-bottom:12px}
+  @media(max-width:420px){.rate-grid{grid-template-columns:1fr}}
+  .rate{display:grid;gap:4px}
+  .rate label{font-size:11.5px;font-weight:700;color:var(--dim)}
+  .rate input{padding:9px 10px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.04);
+    color:var(--txt);font:inherit;font-size:13px;font-weight:800;font-variant-numeric:tabular-nums}
+  .rate input:focus{outline:none;border-color:rgba(94,234,212,.55)}
+
+  .sim{display:grid;gap:8px;margin-top:10px}
+  .simrow{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:7px 10px;
+    border-radius:9px;background:rgba(255,255,255,.03);border:1px solid var(--line)}
+  .simrow b{color:var(--a);font-variant-numeric:tabular-nums}
+
+  .err{font-size:12px;color:var(--bad);font-weight:700;margin:6px 0 0}
+  .note{margin-top:20px;font-size:12px;color:var(--dim2);line-height:1.8}
+  .note b{color:var(--dim)}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,14px);opacity:0;pointer-events:none;
+    background:#e6f4ef;color:#08120f;font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:999px;
+    box-shadow:0 18px 40px -18px rgba(0,0,0,.8);transition:opacity .2s,transform .2s;z-index:50;
+    max-width:calc(100vw - 32px)}
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+  @media(prefers-reduced-motion:reduce){*{transition:none !important;animation:none !important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../"><span aria-hidden="true">←</span> 오늘의 앱 3종</a>
+  <header>
+    <h1>연봉 실수령액 계산기</h1>
+    <p>연봉 하나로 4대보험과 소득세를 계산해 <b>월 실수령액</b>을 보여 줍니다. 부양가족 수와 식대 같은 비과세액도 반영하고, 항목별 공제 명세를 그대로 펼쳐 볼 수 있어요.</p>
+  </header>
+
+  <div class="cols">
+    <!-- ===================== 입력 ===================== -->
+    <section class="panel p-in" aria-label="연봉·공제 조건 입력">
+      <h2>내 조건</h2>
+
+      <div class="field">
+        <label class="field-label" for="annual"><b>연봉</b> 총액<span>세전 · 상여 포함</span></label>
+        <div class="inrow">
+          <div class="inbox">
+            <input id="annual" type="text" inputmode="numeric" autocomplete="off" value="5000" aria-describedby="annualHelp">
+            <span class="unit">만원</span>
+          </div>
+        </div>
+        <div class="chips" id="annualPresets" role="group" aria-label="연봉 빠른 선택"></div>
+        <p class="err" id="errMsg" role="alert" hidden></p>
+      </div>
+
+      <div class="field">
+        <span class="field-label" id="depLabel"><b>부양가족 수</b> 본인 포함<span>기본공제 150만원/명</span></span>
+        <div class="stepper" role="group" aria-labelledby="depLabel">
+          <button type="button" id="depMinus" aria-label="부양가족 수 줄이기">−</button>
+          <div class="val" id="depVal" aria-live="polite">1명</div>
+          <button type="button" id="depPlus" aria-label="부양가족 수 늘리기">+</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="nontax"><b>월 비과세액</b><span>식대·차량보조 등</span></label>
+        <div class="inrow">
+          <div class="inbox">
+            <input id="nontax" type="text" inputmode="numeric" autocomplete="off" value="20">
+            <span class="unit">만원</span>
+          </div>
+        </div>
+        <div class="chips" id="nontaxPresets" role="group" aria-label="비과세액 빠른 선택"></div>
+      </div>
+
+      <details id="rateBox">
+        <summary>보험료·세율 직접 수정</summary>
+        <p class="note" style="margin:0 0 10px;font-size:11.5px">2025년 고시 요율이 기본값입니다. 개정되면 여기서 고쳐 쓰세요.</p>
+        <div class="rate-grid" id="rateGrid"></div>
+        <button class="btn ghost" type="button" id="rateReset">요율 기본값으로</button>
+      </details>
+    </section>
+
+    <!-- ===================== 결과 ===================== -->
+    <section class="panel p-res" aria-label="실수령액 결과">
+      <h2>월 실수령액</h2>
+      <div class="hero">
+        <span class="hero-k" id="heroK">연봉 5,000만원 · 부양가족 1명 기준</span>
+        <strong class="hero-v" id="heroVal">0<small>원</small></strong>
+        <p class="hero-sub" id="heroSub">월 급여 0원에서 공제 0원을 뺀 금액</p>
+        <div class="hero-2">
+          <div><span class="minik">연 실수령액</span><span class="miniv" id="heroYear">0원</span></div>
+          <div><span class="minik">총 공제율</span><span class="miniv" id="heroRate">0%</span></div>
+        </div>
+        <div class="hero-actions">
+          <button class="btn primary" type="button" id="copyBtn">명세 복사</button>
+          <button class="btn ghost" type="button" id="resetBtn">초기화</button>
+        </div>
+      </div>
+
+      <h2 style="margin-top:18px">공제 항목</h2>
+      <ul class="rows" id="rows"></ul>
+
+      <details>
+        <summary>세금 계산 과정</summary>
+        <div class="dl" id="taxDetail"></div>
+      </details>
+    </section>
+
+    <!-- ===================== 인상 시뮬레이션 ===================== -->
+    <section class="panel p-sim" aria-label="연봉 인상 시뮬레이션">
+      <h2>연봉이 오르면?</h2>
+      <p class="note" style="margin:0;font-size:12px">같은 조건에서 연봉이 인상됐을 때 월 실수령액이 얼마나 늘어나는지 계산합니다.</p>
+      <div class="sim" id="simList"></div>
+    </section>
+  </div>
+
+  <p class="note">
+    <b>계산 기준</b> — 2025년 고시 요율 기준(국민연금 4.5%, 건강보험 3.545%, 장기요양 건강보험료의 12.95%, 고용보험 0.9%, 지방소득세 소득세의 10%)이며,
+    국민연금 기준소득월액 상·하한(39만~637만원), 근로소득공제·기본공제·연금보험료공제·근로소득세액공제·누진세율을 반영한 <b>연간 기준 추정치</b>입니다.<br>
+    실제 급여명세서는 회사 규정·간이세액표·연말정산에 따라 달라질 수 있고, 이 계산에는 주민세 외 지방세나 각종 수당·상여 지급 시점이 반영되지 않습니다.
+    모든 계산은 이 브라우저 안에서만 이루어지고, 입력값은 이 기기에만 저장됩니다.
+  </p>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ---------------------------------------------------------------- 기본값 */
+  var DEF_RATES = { pension: 4.5, health: 3.545, care: 12.95, employ: 0.9, local: 10, penLow: 39, penHigh: 637 };
+  var RATE_META = [
+    { key: 'pension', label: '국민연금 (근로자)', unit: '%' },
+    { key: 'health',  label: '건강보험 (근로자)', unit: '%' },
+    { key: 'care',    label: '장기요양 (건강보험 대비)', unit: '%' },
+    { key: 'employ',  label: '고용보험 (근로자)', unit: '%' },
+    { key: 'local',   label: '지방소득세 (소득세 대비)', unit: '%' },
+    { key: 'penLow',  label: '국민연금 기준 하한', unit: '만원' },
+    { key: 'penHigh', label: '국민연금 기준 상한', unit: '만원' }
+  ];
+  var ANNUAL_PRESETS = [3000, 4000, 5000, 6000, 8000, 10000];
+  var NONTAX_PRESETS = [0, 10, 20, 30];
+  var SIM_STEPS = [100, 300, 500];
+  var KEY = 'salarynet:v1';
+
+  var state = { annualMan: '5000', deps: 1, nontaxMan: '20' };
+  var rates = {};
+  for (var rk in DEF_RATES) rates[rk] = DEF_RATES[rk];
+
+  var $ = function (s) { return document.querySelector(s); };
+  var annualEl = $('#annual'), nontaxEl = $('#nontax'), depValEl = $('#depVal');
+  var rowsEl = $('#rows'), taxDetailEl = $('#taxDetail'), simEl = $('#simList');
+  var errEl = $('#errMsg'), toastEl = $('#toast');
+
+  /* ---------------------------------------------------------------- 계산 */
+  function R(x) { return Math.floor(x + 0.5); }
+  function won(n) { return R(n).toLocaleString('ko-KR') + '원'; }
+  function man(n) { return (Math.round(n / 10000 * 10) / 10).toLocaleString('ko-KR') + '만원'; }
+
+  function earnedDeduction(gross) {
+    if (gross <= 5000000) return R(gross * 0.7);
+    if (gross <= 15000000) return R(3500000 + (gross - 5000000) * 0.4);
+    if (gross <= 45000000) return R(7500000 + (gross - 15000000) * 0.15);
+    if (gross <= 100000000) return R(12000000 + (gross - 45000000) * 0.05);
+    return R(14750000 + (gross - 100000000) * 0.02);
+  }
+
+  var BRACKETS = [
+    { up: 14000000,   rate: 0.06, cut: 0 },
+    { up: 50000000,   rate: 0.15, cut: 1260000 },
+    { up: 88000000,   rate: 0.24, cut: 5760000 },
+    { up: 150000000,  rate: 0.35, cut: 15440000 },
+    { up: 300000000,  rate: 0.38, cut: 19940000 },
+    { up: 500000000,  rate: 0.40, cut: 25940000 },
+    { up: 1000000000, rate: 0.42, cut: 35940000 },
+    { up: Infinity,   rate: 0.45, cut: 65940000 }
+  ];
+  function progressive(base) {
+    for (var i = 0; i < BRACKETS.length; i++) {
+      if (base <= BRACKETS[i].up) return Math.max(0, base * BRACKETS[i].rate - BRACKETS[i].cut);
+    }
+    return 0;
+  }
+
+  /** 연봉(만원)·부양가족 수·월 비과세(만원) → 전체 명세 */
+  function calc(annualMan, deps, nontaxMan, rt) {
+    rt = rt || rates;
+    var annual = R(Number(annualMan) * 10000);
+    var monthlyGross = R(annual / 12);
+    var nontax = R(Number(nontaxMan) * 10000);
+    var taxable = Math.max(0, monthlyGross - nontax);
+
+    var low = R(rt.penLow * 10000), high = R(rt.penHigh * 10000);
+    var pensionBase = Math.min(Math.max(taxable, low), high);
+    var pension = R(pensionBase * rt.pension / 100);
+    var health = R(taxable * rt.health / 100);
+    var care = R(health * rt.care / 100);
+    var employ = R(taxable * rt.employ / 100);
+    var insTotal = pension + health + care + employ;
+
+    var totalSalary = Math.max(0, annual - nontax * 12);
+    var deduction = earnedDeduction(totalSalary);
+    var earnedIncome = Math.max(0, totalSalary - deduction);
+    var basic = 1500000 * deps;
+    var pensionDed = pension * 12;
+    var incomeDed = Math.min(earnedIncome, basic + pensionDed);
+    var taxBase = Math.max(0, Math.floor((earnedIncome - incomeDed) / 1000) * 1000);
+    var computedTax = R(progressive(taxBase));
+
+    var creditLimit = totalSalary <= 33000000 ? 740000
+      : totalSalary <= 70000000 ? 660000
+      : totalSalary <= 120000000 ? 500000 : 200000;
+    var rawCredit = computedTax <= 1300000
+      ? R(computedTax * 0.55)
+      : R(1300000 * 0.55 + (computedTax - 1300000) * 0.3);
+    var taxCredit = Math.min(rawCredit, creditLimit, computedTax);
+    var decidedTax = Math.max(0, computedTax - taxCredit);
+    var localTax = R(decidedTax * rt.local / 100);
+
+    var monthlyIncomeTax = R(decidedTax / 12);
+    var monthlyLocalTax = R(localTax / 12);
+    var monthlyDeduct = insTotal + monthlyIncomeTax + monthlyLocalTax;
+    var monthlyNet = monthlyGross - monthlyDeduct;
+
+    return {
+      annual: annual, monthlyGross: monthlyGross, nontax: nontax, taxable: taxable,
+      pension: pension, health: health, care: care, employ: employ, insTotal: insTotal,
+      totalSalary: totalSalary, earnedDeduction: deduction, earnedIncome: earnedIncome,
+      basicDeduction: basic, pensionDeduction: pensionDed, incomeDeduction: incomeDed,
+      taxBase: taxBase, computedTax: computedTax, taxCredit: taxCredit, creditLimit: creditLimit,
+      decidedTax: decidedTax, localTax: localTax,
+      monthlyIncomeTax: monthlyIncomeTax, monthlyLocalTax: monthlyLocalTax,
+      monthlyDeduct: monthlyDeduct, monthlyNet: monthlyNet,
+      annualNet: annual - monthlyDeduct * 12,
+      excludeRate: annual > 0 ? monthlyDeduct * 12 / annual * 100 : 0,
+      pensionBase: pensionBase
+    };
+  }
+
+  function readAnnual() {
+    var raw = String(state.annualMan).replace(/[\s,]/g, '');
+    if (raw === '') return { empty: true };
+    if (!/^\d+(\.\d+)?$/.test(raw)) return { bad: true };
+    var n = Number(raw);
+    if (!isFinite(n) || n <= 0) return { bad: true };
+    if (n > 100000) return { bad: true };
+    return { n: n };
+  }
+  function readNontax() {
+    var raw = String(state.nontaxMan).replace(/[\s,]/g, '');
+    if (raw === '') return { n: 0 };
+    if (!/^\d+(\.\d+)?$/.test(raw)) return { bad: true };
+    return { n: Number(raw) };
+  }
+
+  /* ---------------------------------------------------------------- 렌더 */
+  function pctOf(v, total) { return total > 0 ? Math.max(1.5, v / total * 100) : 0; }
+
+  function renderRows(c) {
+    var items = [
+      { n: '국민연금', s: '기준소득월액의 ' + rates.pension + '%', v: c.pension },
+      { n: '건강보험', s: '보수월액의 ' + rates.health + '%', v: c.health },
+      { n: '장기요양보험', s: '건강보험료의 ' + rates.care + '%', v: c.care },
+      { n: '고용보험', s: '보수월액의 ' + rates.employ + '%', v: c.employ },
+      { n: '소득세', s: '연간 결정세액 ÷ 12', v: c.monthlyIncomeTax, tax: true },
+      { n: '지방소득세', s: '소득세의 ' + rates.local + '%', v: c.monthlyLocalTax, tax: true }
+    ];
+    var max = Math.max.apply(null, items.map(function (i) { return i.v; }).concat([1]));
+    var html = items.map(function (i) {
+      return '<li class="row' + (i.tax ? ' tax' : '') + '">' +
+        '<span class="rn">' + i.n + '<i>' + i.s + '</i></span>' +
+        '<span class="rv">' + won(i.v) + '</span>' +
+        '<span class="bar" aria-hidden="true"><span style="width:' + pctOf(i.v, max).toFixed(1) + '%"></span></span>' +
+        '</li>';
+    }).join('');
+    html += '<li class="row total"><span class="rn">월 공제 합계</span><span class="rv">' + won(c.monthlyDeduct) + '</span></li>';
+    rowsEl.innerHTML = html;
+  }
+
+  function renderTax(c) {
+    var rows = [
+      ['총급여 (연)', won(c.totalSalary), '연봉 − 비과세×12'],
+      ['근로소득공제', '−' + won(c.earnedDeduction), '구간별 공제율'],
+      ['근로소득금액', won(c.earnedIncome), ''],
+      ['기본공제', '−' + won(c.basicDeduction), '150만원 × ' + state.deps + '명'],
+      ['연금보험료공제', '−' + won(c.pensionDeduction), '국민연금 × 12'],
+      ['과세표준', won(c.taxBase), '1,000원 미만 절사'],
+      ['산출세액', won(c.computedTax), '누진세율'],
+      ['근로소득세액공제', '−' + won(c.taxCredit), '한도 ' + won(c.creditLimit)],
+      ['결정세액 (연)', won(c.decidedTax), ''],
+      ['지방소득세 (연)', won(c.localTax), '결정세액의 ' + rates.local + '%']
+    ];
+    taxDetailEl.innerHTML = rows.map(function (r) {
+      return '<div class="d"><span>' + r[0] + (r[2] ? ' <i style="color:#647c74;font-style:normal;font-size:11px">' + r[2] + '</i>' : '') +
+        '</span><b>' + r[1] + '</b></div>';
+    }).join('');
+  }
+
+  function renderSim(c) {
+    var base = readAnnual();
+    if (base.empty || base.bad) { simEl.innerHTML = ''; return; }
+    simEl.innerHTML = SIM_STEPS.map(function (step) {
+      var nxt = calc(base.n + step, state.deps, readNontax().n || 0);
+      var diff = nxt.monthlyNet - c.monthlyNet;
+      return '<div class="simrow"><span>연봉 +' + step.toLocaleString('ko-KR') + '만원 → 월 실수령 ' +
+        won(nxt.monthlyNet) + '</span><b>+' + diff.toLocaleString('ko-KR') + '원</b></div>';
+    }).join('');
+  }
+
+  function render() {
+    if (annualEl.value !== state.annualMan) annualEl.value = state.annualMan;
+    if (nontaxEl.value !== state.nontaxMan) nontaxEl.value = state.nontaxMan;
+    depValEl.textContent = state.deps + '명';
+    $('#depMinus').disabled = state.deps <= 1;
+    $('#depPlus').disabled = state.deps >= 8;
+    renderRateInputs();
+
+    var a = readAnnual(), t = readNontax();
+    if (a.empty) {
+      errEl.hidden = true;
+      $('#heroK').textContent = '연봉을 입력하면 바로 계산됩니다';
+      $('#heroVal').innerHTML = '–';
+      $('#heroSub').textContent = '';
+      $('#heroYear').textContent = '–';
+      $('#heroRate').textContent = '–';
+      rowsEl.innerHTML = ''; taxDetailEl.innerHTML = ''; simEl.innerHTML = '';
+      return;
+    }
+    if (a.bad) {
+      errEl.textContent = '숫자로 된 연봉을 넣어 주세요. 예) 5000 (만원)';
+      errEl.hidden = false;
+      $('#heroK').textContent = '연봉을 확인해 주세요';
+      $('#heroVal').innerHTML = '–';
+      $('#heroSub').textContent = '';
+      $('#heroYear').textContent = '–';
+      $('#heroRate').textContent = '–';
+      rowsEl.innerHTML = ''; simEl.innerHTML = ''; taxDetailEl.innerHTML = '';
+      return;
+    }
+    errEl.hidden = true;
+    if (t.bad) t.n = 0;
+
+    var c = calc(a.n, state.deps, t.n);
+    $('#heroK').textContent = '연봉 ' + a.n.toLocaleString('ko-KR') + '만원 · 부양가족 ' + state.deps + '명 기준';
+    $('#heroVal').innerHTML = R(c.monthlyNet).toLocaleString('ko-KR') + '<small>원</small>';
+    $('#heroSub').textContent = '월 급여 ' + won(c.monthlyGross) + '에서 공제 ' + won(c.monthlyDeduct) + '을 뺀 금액';
+    $('#heroYear').textContent = won(c.annualNet);
+    $('#heroRate').textContent = (Math.round(c.excludeRate * 10) / 10).toFixed(1) + '%';
+    renderRows(c);
+    renderTax(c);
+    renderSim(c);
+    save();
+  }
+
+  function renderRateInputs() {
+    if ($('#rateGrid').childElementCount) {
+      RATE_META.forEach(function (m) {
+        var inp = $('#rate-' + m.key);
+        if (inp) inp.value = rates[m.key];
+      });
+      return;
+    }
+    $('#rateGrid').innerHTML = RATE_META.map(function (m) {
+      return '<div class="rate"><label for="rate-' + m.key + '">' + m.label + ' (' + m.unit + ')</label>' +
+        '<input id="rate-' + m.key + '" data-rate="' + m.key + '" type="number" step="0.001" value="' + rates[m.key] + '"></div>';
+    }).join('');
+  }
+
+  function renderPresets() {
+    $('#annualPresets').innerHTML = ANNUAL_PRESETS.map(function (v) {
+      return '<button class="chip" type="button" data-annual="' + v + '" aria-pressed="' +
+        (String(v) === String(state.annualMan) ? 'true' : 'false') + '">' + v.toLocaleString('ko-KR') + '만원</button>';
+    }).join('');
+    $('#nontaxPresets').innerHTML = NONTAX_PRESETS.map(function (v) {
+      return '<button class="chip" type="button" data-nontax="' + v + '" aria-pressed="' +
+        (String(v) === String(state.nontaxMan) ? 'true' : 'false') + '">' + v + '만원</button>';
+    }).join('');
+  }
+
+  /* ---------------------------------------------------------------- 저장 */
+  function save() {
+    try {
+      localStorage.setItem(KEY, JSON.stringify({ annualMan: state.annualMan, deps: state.deps,
+        nontaxMan: state.nontaxMan, rates: rates }));
+    } catch (e) {}
+  }
+  function load() {
+    try {
+      var raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      if (!raw || typeof raw !== 'object') return;
+      if (typeof raw.annualMan === 'string' && raw.annualMan !== '') state.annualMan = raw.annualMan;
+      if (typeof raw.nontaxMan === 'string') state.nontaxMan = raw.nontaxMan;
+      if (raw.deps >= 1 && raw.deps <= 8) state.deps = raw.deps;
+      if (raw.rates && typeof raw.rates === 'object') {
+        RATE_META.forEach(function (m) {
+          var v = Number(raw.rates[m.key]);
+          if (isFinite(v) && v >= 0) rates[m.key] = v;
+        });
+      }
+    } catch (e) {}
+  }
+
+  var toastTimer = null;
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1800);
+  }
+  function copyText(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallback(text); });
+    }
+    return Promise.resolve(fallback(text));
+  }
+  function fallback(text) {
+    try {
+      var ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly', '');
+      ta.style.cssText = 'position:fixed;top:-1000px;opacity:0';
+      document.body.appendChild(ta); ta.select();
+      var ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    } catch (e) { return false; }
+  }
+
+  /* ---------------------------------------------------------------- 이벤트 */
+  annualEl.addEventListener('input', function () {
+    state.annualMan = this.value;
+    renderPresets();
+    render();
+  });
+  nontaxEl.addEventListener('input', function () {
+    state.nontaxMan = this.value;
+    renderPresets();
+    render();
+  });
+  $('#annualPresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-annual]');
+    if (!b) return;
+    state.annualMan = b.getAttribute('data-annual');
+    renderPresets();
+    render();
+    toast(Number(state.annualMan).toLocaleString('ko-KR') + '만원으로 계산했어요');
+  });
+  $('#nontaxPresets').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-nontax]');
+    if (!b) return;
+    state.nontaxMan = b.getAttribute('data-nontax');
+    renderPresets();
+    render();
+  });
+  $('#depMinus').addEventListener('click', function () {
+    if (state.deps > 1) { state.deps--; render(); }
+  });
+  $('#depPlus').addEventListener('click', function () {
+    if (state.deps < 8) { state.deps++; render(); }
+  });
+  $('#rateGrid').addEventListener('input', function (e) {
+    var key = e.target.getAttribute('data-rate');
+    if (!key) return;
+    var v = Number(e.target.value);
+    if (!isFinite(v) || v < 0) return;
+    rates[key] = v;
+    render();
+  });
+  $('#rateReset').addEventListener('click', function () {
+    for (var k in DEF_RATES) rates[k] = DEF_RATES[k];
+    render();
+    toast('요율을 기본값으로 되돌렸어요');
+  });
+  $('#resetBtn').addEventListener('click', function () {
+    state = { annualMan: '5000', deps: 1, nontaxMan: '20' };
+    for (var k in DEF_RATES) rates[k] = DEF_RATES[k];
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    renderPresets();
+    render();
+    toast('처음 상태로 되돌렸어요');
+  });
+  $('#copyBtn').addEventListener('click', function () {
+    var a = readAnnual();
+    if (a.empty || a.bad) { toast('복사할 결과가 없어요'); return; }
+    var c = calc(a.n, state.deps, readNontax().n || 0);
+    var lines = [
+      '연봉 ' + a.n.toLocaleString('ko-KR') + '만원 · 부양가족 ' + state.deps + '명 · 월 비과세 ' + (readNontax().n || 0) + '만원',
+      '월 급여 ' + won(c.monthlyGross),
+      '국민연금 ' + won(c.pension) + ' / 건강보험 ' + won(c.health) + ' / 장기요양 ' + won(c.care) +
+        ' / 고용보험 ' + won(c.employ),
+      '소득세 ' + won(c.monthlyIncomeTax) + ' / 지방소득세 ' + won(c.monthlyLocalTax),
+      '월 공제 ' + won(c.monthlyDeduct),
+      '월 실수령액 ' + won(c.monthlyNet) + ' (연 ' + won(c.annualNet) + ')'
+    ];
+    copyText(lines.join('\n')).then(function (ok) { toast(ok ? '명세를 복사했어요' : '복사에 실패했어요'); });
+  });
+
+  /* ---------------------------------------------------------------- 공개 API */
+  window.Salary = {
+    rates: function () { var o = {}; for (var k in rates) o[k] = rates[k]; return o; },
+    calc: function (annualMan, deps, nontaxMan, rt) {
+      return calc(annualMan, deps, nontaxMan, rt || rates);
+    },
+    state: function () { return { annualMan: state.annualMan, deps: state.deps, nontaxMan: state.nontaxMan }; },
+    set: function (o) {
+      if (o && typeof o.annualMan === 'string') state.annualMan = o.annualMan;
+      if (o && typeof o.nontaxMan === 'string') state.nontaxMan = o.nontaxMan;
+      if (o && o.deps) state.deps = Math.max(1, Math.min(8, o.deps));
+      if (o && o.rates) for (var k in o.rates) if (isFinite(o.rates[k])) rates[k] = o.rates[k];
+      renderPresets();
+      render();
+    },
+    presets: function () { return { annual: ANNUAL_PRESETS.slice(), nontax: NONTAX_PRESETS.slice(), sim: SIM_STEPS.slice() }; },
+    ratesMeta: function () { return RATE_META.slice(); }
+  };
+
+  load();
+  renderPresets();
+  render();
+})();
+</script>
+</body>
+</html>

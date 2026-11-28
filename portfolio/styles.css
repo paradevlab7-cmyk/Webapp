@@ -842,3 +842,9 @@ html[data-layout="grid"] .card-foot{display:none}
   *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important}
   .card{animation:none}
 }
+
+/* 키보드 안내 (2026-11-28 개선) */
+.kbd-hint{display:flex;align-items:center;gap:4px;flex-wrap:wrap;color:var(--dim-2)}
+.kbd-hint kbd{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:10.5px;
+  line-height:1;padding:4px 5px;border-radius:5px;border:1px solid var(--line-strong);
+  background:rgba(255,255,255,.05);color:var(--dim);min-width:18px;text-align:center}
